@@ -125,7 +125,7 @@ const notifyJobExpired = async (userId, jobId, jobTitle) => {
 /**
  * Create broadcast notification (admin)
  */
-const broadcastNotification = async (userIds, title, message, link) => {
+const broadcastNotification = async (userIds, title, message, link, senderId) => {
   const notifications = userIds.map((userId) => ({
     user: userId,
     type: 'admin_broadcast',
@@ -133,6 +133,7 @@ const broadcastNotification = async (userIds, title, message, link) => {
     message,
     data: {
       link,
+      fromUserId: senderId,
     },
     priority: 'high',
   }));

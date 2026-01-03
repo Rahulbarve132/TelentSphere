@@ -22,6 +22,7 @@ router.put('/jobs/:id/moderate', adminController.moderateJob);
 router.get('/analytics', adminController.getAnalytics);
 
 // Broadcast notification
+router.get('/broadcast/stats', adminController.getBroadcastStats);
 router.post('/broadcast', adminController.broadcastNotification);
 
 module.exports = router;

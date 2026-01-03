@@ -169,8 +169,49 @@ const broadcastNotification = catchAsync(async (req, res, next) => {
   const users = await User.find(query).select('_id');
   const userIds = users.map(u => u._id);
 
-  await notificationService.broadcastNotification(userIds, title, message, link);
+  await notificationService.broadcastNotification(userIds, title, message, link, req.user._id);
   res.status(200).json({ success: true, message: `Broadcast sent to ${userIds.length} users` });
+});
+
+/**
+ * @desc    Get broadcast statistics for the logged-in admin
+ * @route   GET /api/admin/broadcast/stats
+ * @access  Private/Admin
+ */
+const getBroadcastStats = catchAsync(async (req, res, next) => {
+  const stats = await Notification.aggregate([
+    {
+      $match: {
+        type: 'admin_broadcast',
+        'data.fromUserId': req.user._id,
+      },
+    },
+    {
+      $group: {
+        _id: {
+          title: '$title',
+          createdAt: '$createdAt', // Assuming accurate timestamps for the batch
+        },
+        recipientCount: { $sum: 1 },
+      },
+    },
+    {
+      $sort: { '_id.createdAt': -1 },
+    },
+  ]);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      totalBroadcasts: stats.length,
+      totalRecipients: stats.reduce((acc, curr) => acc + curr.recipientCount, 0),
+      history: stats.map(s => ({
+        title: s._id.title,
+        sentAt: s._id.createdAt,
+        recipients: s.recipientCount,
+      })),
+    },
+  });
 });
 
 module.exports = {
@@ -181,4 +222,5 @@ module.exports = {
   moderateJob,
   getAnalytics,
   broadcastNotification,
+  getBroadcastStats,
 };

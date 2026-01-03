@@ -27,7 +27,7 @@ const createJob = catchAsync(async (req, res, next) => {
  * @access  Public
  */
 const getAllJobs = catchAsync(async (req, res, next) => {
-  const { page = 1, limit = 10, status = 'open' } = req.query;
+  const { page = 1, limit = 10, status = 'open', type } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const query = {
@@ -35,6 +35,10 @@ const getAllJobs = catchAsync(async (req, res, next) => {
     expiresAt: { $gt: new Date() },
     visibility: 'public',
   };
+
+  if (type) {
+    query.type = type;
+  }
 
   const [jobs, total] = await Promise.all([
     Job.find(query)

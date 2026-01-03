@@ -39,6 +39,7 @@ const jobSchema = new mongoose.Schema(
       {
         type: String,
         trim: true,
+        lowercase: true,
       },
     ],
     experienceLevel: {
@@ -62,7 +63,7 @@ const jobSchema = new mongoose.Schema(
       },
       currency: {
         type: String,
-        default: 'USD',
+        default: 'INR',
       },
     },
     location: {

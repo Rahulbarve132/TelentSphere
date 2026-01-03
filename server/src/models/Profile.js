@@ -91,6 +91,7 @@ const profileSchema = new mongoose.Schema(
       {
         type: String,
         trim: true,
+        lowercase: true,
       },
     ],
     experience: [experienceSchema],

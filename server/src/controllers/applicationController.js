@@ -1,4 +1,7 @@
+const fs = require('fs');
+const path = require('path');
 const { Application, Job, User, Profile } = require('../models');
+
 const { AppError, catchAsync } = require('../utils');
 const { emailService, notificationService } = require('../services');
 
@@ -36,8 +39,16 @@ const applyForJob = catchAsync(async (req, res, next) => {
   });
 
   if (existingApplication) {
+    // Cleanup uploaded file if duplicate
+    if (req.file) {
+      const filePath = path.join(process.cwd(), req.file.path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
     return next(AppError.conflict('You have already applied for this job'));
   }
+
 
   // Create application
   const application = await Application.create({
