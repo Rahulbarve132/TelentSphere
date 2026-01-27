@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle2, Search, Briefcase } from "lucide-react";
 import { JobCard } from "@/components/jobs/JobCard";
 import { PremiumCandidates } from "@/components/home/PremiumCandidates";
 import { Testimonials } from "@/components/home/Testimonials";
+import { FAQ } from "@/components/home/FAQ";
 
 export default function Home() {
   return (
@@ -112,6 +113,9 @@ export default function Home() {
 
       {/* Testimonials Section */}
       <Testimonials />
+
+      {/* FAQ Section */}
+      <FAQ />
     </div>
   );
 }

@@ -4,65 +4,71 @@ import { useState, useEffect } from "react";
 import api from "@/lib/axios";
 
 import { useAuth } from "@/context/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Briefcase, FileText, Eye, TrendingUp, ArrowRight, Activity, Users, PlusCircle } from "lucide-react";
 import Link from "next/link";
-import { JobCard } from "@/components/jobs/JobCard"; // Assuming we reuse JobCard
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Developer/Client specific state
   const [activities, setActivities] = useState<any[]>([]);
-  const [applications, setApplications] = useState<any[]>([]); // For client
-  const [jobs, setJobs] = useState<any[]>([]); // For client
+  const [applications, setApplications] = useState<any[]>([]); 
+  const [jobs, setJobs] = useState<any[]>([]); 
+
+  // Admin specific state
+  const [adminData, setAdminData] = useState<{
+    stats: { totalUsers: number; totalJobs: number; totalApplications: number };
+    usersByRole: { _id: string; count: number }[];
+    applicationsByStatus: { _id: string; count: number }[];
+    jobsByStatus: { _id: string; count: number }[];
+    recentUsers: any[];
+    recentJobs: any[];
+  } | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
         if (user?.role === 'admin') {
-           const response = await api.get('/admin/analytics');
+           // Updated endpoint for admin dashboard
+           const response = await api.get('/admin/dashboard');
            if (response.data.success) {
              const data = response.data.data;
+             setAdminData(data); // Store the full data object
+
+             // Map the stats for the top cards
              setStats([
                 {
                   title: "Total Users",
-                  value: String(data.last30Days.newUsers),
+                  value: String(data.stats.totalUsers),
                   icon: Users,
-                  trend: "+" + data.last30Days.newUsers + " this month",
+                  trend: "Registered users",
                   color: "text-blue-500",
                   bg: "bg-blue-500/10",
                 },
                 {
-                  title: "New Jobs (30d)",
-                  value: String(data.last30Days.newJobs),
+                  title: "Total Jobs",
+                  value: String(data.stats.totalJobs),
                   icon: Briefcase,
-                  trend: "Active this month",
+                  trend: "Posted jobs",
                   color: "text-green-500",
                   bg: "bg-green-500/10",
                 },
                 {
-                  title: "Applications (30d)",
-                  value: String(data.last30Days.applications),
+                  title: "Total Applications",
+                  value: String(data.stats.totalApplications),
                   icon: FileText,
-                  trend: "Processed this month",
-                  color: "text-emerald-500",
-                  bg: "bg-emerald-500/10",
-                },
-                 {
-                  title: "Job Categories",
-                  value: String(data.jobsByCategory.length),
-                  icon: Activity,
-                  trend: "Active sectors",
-                  color: "text-purple-500",
-                  bg: "bg-purple-500/10",
+                  trend: "Submitted applications",
+                  color: "text-orange-500",
+                  bg: "bg-orange-500/10",
                 },
              ]);
-             // Pass partial data for the chart if needed
-             setActivities(data.jobsByCategory || []); 
            }
         } 
         else if (user?.role === 'developer') {
@@ -105,10 +111,17 @@ export default function Dashboard() {
     if (user) fetchDashboardData();
   }, [user]);
 
-
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-1">
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -118,6 +131,8 @@ export default function Dashboard() {
           <p className="text-muted-foreground mt-1">
              {user?.role === 'developer' 
                 ? "Here's what's happening with your job search today." 
+                : user?.role === 'admin' 
+                ? "Here is the system overview and latest statistics."
                 : "Overview of your hiring pipeline and job performance."}
           </p>
         </div>
@@ -126,7 +141,7 @@ export default function Dashboard() {
               <Button className="rounded-full shadow-lg shadow-primary/20">
               Find New Jobs <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
-          </Link>
+           </Link>
         ) : user?.role === 'admin' ? null : (
            <Link href="/dashboard/jobs/new">
               <Button className="rounded-full shadow-lg shadow-primary/20">
@@ -136,7 +151,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Stats Grid - Using fetched 'stats' state */}
+      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.length > 0 ? stats.map((stat, index) => (
           <Card key={index} className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-md transition-all duration-300">
@@ -156,8 +171,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )) : (
-            // Skeleton / Empty state for stats
-            Array(4).fill(0).map((_, i) => (
+            Array(loading ? (user?.role === 'admin' ? 3 : 4) : 0).fill(0).map((_, i) => (
                 <Card key={i} className="animate-pulse border-border/50 bg-card/50">
                     <CardHeader className="pb-2"><div className="h-4 bg-muted rounded w-1/2"></div></CardHeader>
                     <CardContent><div className="h-8 bg-muted rounded w-full mb-2"></div><div className="h-3 bg-muted rounded w-1/3"></div></CardContent>
@@ -166,7 +180,141 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Role-Specific Content */}
+      {/* ADMIN DASHBOARD CONTENT */}
+      {user?.role === 'admin' && adminData && (
+        <div className="space-y-8">
+            
+            {/* Breakdowns Row */}
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card className="border-border/50 bg-card/50">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Users by Role</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       {adminData.usersByRole.map((role) => (
+                           <div key={role._id} className="flex items-center justify-between">
+                               <div className="flex items-center gap-2">
+                                   <div className={`p-1.5 rounded-md ${
+                                       role._id === 'developer' ? 'bg-blue-500/10 text-blue-500' :
+                                       role._id === 'client' ? 'bg-purple-500/10 text-purple-500' :
+                                       'bg-orange-500/10 text-orange-500' // admin/other
+                                   }`}>
+                                       {role._id === 'developer' ? <Code2Icon /> : 
+                                        role._id === 'client' ? <BriefcaseIcon /> : <ShieldCheckIcon />}
+                                   </div>
+                                   <span className="capitalize font-medium">{role._id}</span>
+                               </div>
+                               <span className="font-bold">{role.count}</span>
+                           </div>
+                       ))}
+                    </CardContent>
+                </Card>
+
+                <Card className="border-border/50 bg-card/50">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Job Status</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       {adminData.jobsByStatus.map((status) => (
+                           <div key={status._id} className="flex items-center justify-between">
+                               <div className="flex items-center gap-2">
+                                   <div className="w-2 h-2 rounded-full bg-primary" />
+                                   <span className="capitalize text-muted-foreground">{status._id}</span>
+                               </div>
+                               <Badge variant="secondary">{status.count}</Badge>
+                           </div>
+                       ))}
+                       {adminData.jobsByStatus.length === 0 && <p className="text-sm text-muted-foreground">No jobs found.</p>}
+                    </CardContent>
+                </Card>
+
+                <Card className="border-border/50 bg-card/50">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Applications</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       {adminData.applicationsByStatus.map((status) => (
+                           <div key={status._id} className="flex items-center justify-between">
+                               <span className="capitalize text-sm font-medium">{status._id}</span>
+                               <span className="font-bold">{status.count}</span>
+                           </div>
+                       ))}
+                         {adminData.applicationsByStatus.length === 0 && <p className="text-sm text-muted-foreground">No applications found.</p>}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Recent Users & Jobs */}
+            <div className="grid gap-8 md:grid-cols-2">
+                
+                {/* Recent Users */}
+                <Card className="border-border/50 bg-card/50">
+                    <CardHeader >
+                        <CardTitle>Recent Users</CardTitle>
+                        <CardDescription>Newest users registered on the platform</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                           {adminData.recentUsers.map((u) => (
+                               <div key={u._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                                   <div className="flex items-center gap-3">
+                                       <Avatar className="h-9 w-9">
+                                           <AvatarFallback>{u.email[0].toUpperCase()}</AvatarFallback>
+                                       </Avatar>
+                                       <div className="grid gap-0.5">
+                                           <p className="text-sm font-medium leading-none">{u.email}</p>
+                                           <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
+                                       </div>
+                                   </div>
+                                   <div className="text-right">
+                                       <p className="text-xs text-muted-foreground">{formatDate(u.createdAt)}</p>
+                                   </div>
+                               </div>
+                           ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Recent Jobs */}
+                <Card className="border-border/50 bg-card/50">
+                    <CardHeader>
+                        <CardTitle>Recent Jobs</CardTitle>
+                        <CardDescription>Latest jobs posted by clients</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                           {adminData.recentJobs.map((job) => (
+                               <div key={job._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                                   <div className="grid gap-1">
+                                       <p className="text-sm font-medium leading-none line-clamp-1">{job.title}</p>
+                                       <div className="flex items-center gap-2">
+                                           <Badge variant="outline" className="text-[10px] py-0 h-5 lowercase">{job.type}</Badge>
+                                           <span className="text-xs text-muted-foreground">
+                                                {job.budget?.type === 'fixed' 
+                                                    ? `${job.budget.currency} ${job.budget.min}` 
+                                                    : `${job.budget.currency} ${job.budget.min}-${job.budget.max}`}
+                                           </span>
+                                       </div>
+                                   </div>
+                                   <div className="flex flex-col items-end gap-1">
+                                        <Badge variant={job.status === 'open' ? 'default' : 'secondary'} className="text-[10px] h-5 capitalize">
+                                            {job.status}
+                                        </Badge>
+                                        <span className="text-[10px] text-muted-foreground">{formatDate(job.createdAt)}</span>
+                                   </div>
+                               </div>
+                           ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+        </div>
+      )}
+
+
+      {/* ROLE-SPECIFIC CONTENT (Developer/Client) - Same as before but wrapped to hide if Admin */}
+      {user?.role !== 'admin' && (
       <div className="grid md:grid-cols-7 gap-8">
         
         {/* DEVELOPER DASHBOARD CONTENT */}
@@ -346,40 +494,21 @@ export default function Dashboard() {
                  </Card>
             </>
         )}
-
-        {/* ADMIN CONTENT */}
-        {user?.role === 'admin' && activities.length > 0 && (
-            <Card className="md:col-span-4 border-border/50 bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle>Jobs by Category</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {activities.map((category: any, index: number) => {
-                             // Assuming activities state holds job categories for Admin
-                             const maxCount = Math.max(...activities.map((c: any) => c.count));
-                             const percentage = (category.count / maxCount) * 100;
-
-                             return (
-                                <div key={index} className="space-y-1">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-medium capitalize">{category._id.replace('-', ' ')}</span>
-                                        <span className="text-muted-foreground">{category.count} jobs</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-secondary/10 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-primary rounded-full transition-all duration-500" 
-                                            style={{ width: `${percentage}%` }}
-                                        />
-                                    </div>
-                                </div>
-                             );
-                        })}
-                    </div>
-                </CardContent>
-            </Card>
-        )}
       </div>
+      )}
     </div>
   );
 }
+
+// Icon components helper for inline usage if simple
+const Code2Icon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+)
+
+const BriefcaseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+)
+
+const ShieldCheckIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+)
