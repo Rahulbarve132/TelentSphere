@@ -217,7 +217,7 @@ export default function BroadcastPage() {
                                             </div>
                                         </SelectItem>
                                         <SelectItem value="client">Clients Only</SelectItem>
-                                        <SelectItem value="developer">Developers Only</SelectItem>
+                                        <SelectItem value="talent">Talent Only</SelectItem>
                                         <SelectItem value="recruiter">Recruiters Only</SelectItem>
                                     </SelectContent>
                                 </Select>

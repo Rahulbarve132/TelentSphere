@@ -14,7 +14,7 @@ const TESTIMONIALS = [
     rating: 5,
   },
   {
-    content: "As a developer, I've never had a smoother experience. The platform highlights my skills perfectly, and I landed my dream remote job in just two weeks.",
+    content: "As a professional, I've never had a smoother experience. The platform highlights my skills perfectly, and I landed my dream remote job in just two weeks.",
     author: "David Chen",
     role: "Full Stack Developer",
     company: "Placed at InnovateSoft",
@@ -38,7 +38,7 @@ export const Testimonials = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <Badge className="mb-4">Success Stories</Badge>
           <h2 className="text-4xl font-bold tracking-tight mb-4">
-            Trusted by Leaders and Developers
+            Trusted by Leaders and Talent
           </h2>
           <p className="text-xl text-muted-foreground">
             Don't just take our word for it. Hear from the community building the future with TalentSphere.

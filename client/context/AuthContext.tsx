@@ -9,7 +9,7 @@ interface User {
   _id: string;
   id?: string;
   email: string;
-  role: "developer" | "client" | "recruiter" | "admin";
+  role: "talent" | "client" | "recruiter" | "admin";
   firstName?: string;
   lastName?: string;
   avatar?: string;
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast.success("Logged in successfully");
     
     // Redirect based on role or to dashboard
-    if (userData.role === 'developer') {
+    if (userData.role === 'talent') {
         router.push('/dashboard/applications');
     } else if (userData.role === 'client' || userData.role === 'recruiter') {
         router.push('/dashboard/jobs');

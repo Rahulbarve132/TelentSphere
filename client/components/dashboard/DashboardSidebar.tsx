@@ -130,7 +130,7 @@ function SidebarContent({ mobile = false, setOpen }: { mobile?: boolean, setOpen
     const { logout, user } = useAuth();
     
     let sidebarItems = clientItems;
-    if (user?.role === 'developer') {
+    if (user?.role === 'talent') {
         sidebarItems = developerItems;
     } else if (user?.role === 'admin') {
         sidebarItems = adminItems;
@@ -146,7 +146,7 @@ function SidebarContent({ mobile = false, setOpen }: { mobile?: boolean, setOpen
                 </Link>
                 <div className="flex justify-between items-center mt-1">
                     <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-                         {user?.role === 'developer' ? 'Dashboard' : (user?.role === 'admin' ? 'Admin Panel' : 'Business')}
+                         {user?.role === 'talent' ? 'Dashboard' : (user?.role === 'admin' ? 'Admin Panel' : 'Business')}
                     </span>
                     {/* Role Badge if needed */}
                 </div>

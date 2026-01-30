@@ -14,14 +14,14 @@ import Link from "next/link";
 
 const FAQS = [
   {
-    question: "How does TalentSphere verify developers?",
+    question: "How does TalentSphere verify talent?",
     answer:
-      "Every developer on TalentSphere undergoes a rigorous vetting process. This includes identity verification, portfolio reviews, technical assessments, and live coding interviews to ensure top-tier quality.",
+      "Every talent on TalentSphere undergoes a rigorous vetting process. This includes identity verification, portfolio reviews, technical assessments, and live coding interviews to ensure top-tier quality.",
   },
   {
     question: "Is it free for job seekers?",
     answer:
-      "Yes! TalentSphere is completely free for developers looking for jobs. You can create a profile, browse listings, and apply to unlimited jobs without any hidden fees.",
+      "Yes! TalentSphere is completely free for talent looking for jobs. You can create a profile, browse listings, and apply to unlimited jobs without any hidden fees.",
   },
   {
     question: "How do I post a job?",

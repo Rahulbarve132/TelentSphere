@@ -12,7 +12,7 @@ export default function AboutPage() {
       <div className="prose dark:prose-invert mx-auto">
         <p>
             TalentSphere is a premier platform dedicated to connecting the world's best talent with top-tier companies. 
-            Whether you are a developer looking for your next challenge, or a company seeking to build a dream team, 
+            Whether you are talent looking for your next challenge, or a company seeking to build a dream team, 
             we provide the tools and connections to make it happen.
         </p>
       </div>

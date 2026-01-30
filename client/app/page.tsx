@@ -32,7 +32,7 @@ export default function Home() {
           </h1>
           
           <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Connect with top-tier companies and talented developers. 
+            Connect with top-tier companies and talented professionals. 
             TalentSphere bridges the gap between ambition and opportunity.
           </p>
           
@@ -54,7 +54,7 @@ export default function Home() {
             {[
               { label: "Active Jobs", value: "500+" },
               { label: "Companies", value: "120+" },
-              { label: "Developers", value: "10k+" },
+              { label: "Talent", value: "10k+" },
               { label: "Placements", value: "95%" },
             ].map((stat, i) => (
               <div key={i} className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 shadow-sm">
@@ -87,7 +87,7 @@ export default function Home() {
                },
                {
                  title: "Verified Profiles",
-                 desc: "All developer profiles are verified to ensure high-quality talent and trust.",
+                 desc: "All talent profiles are verified to ensure high-quality talent and trust.",
                  icon: Briefcase
                },
                {

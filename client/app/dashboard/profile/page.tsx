@@ -307,7 +307,7 @@ export default function ProfilePage() {
                              <option value="not-available">🔴 Not Available</option>
                          </select>
                      </div>
-                     {user?.role === 'developer' && (
+                     {user?.role === 'talent' && (
                        <div className="space-y-2">
                          <Label htmlFor="hourlyRate">Hourly Rate (USD)</Label>
                          <Input 

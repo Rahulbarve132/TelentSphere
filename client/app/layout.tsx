@@ -19,7 +19,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "TalentSphere - Connect with Top Talent",
-  description: "The premier platform for developers and recruiters.",
+  description: "The premier platform for talent and recruiters.",
 };
 
 export default function RootLayout({

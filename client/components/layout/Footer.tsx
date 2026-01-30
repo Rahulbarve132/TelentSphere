@@ -24,7 +24,7 @@ export function Footer() {
               </li>
               <li>
                 <a href="#" className="text-base text-muted-foreground hover:text-primary">
-                  For Developers
+                  For Talent
                 </a>
               </li>
               <li>

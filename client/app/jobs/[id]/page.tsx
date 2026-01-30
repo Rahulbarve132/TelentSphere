@@ -128,8 +128,8 @@ export default function JobDetailsPage() {
           router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
           return;
       }
-      if (user.role !== 'developer') {
-          toast.error("Only developers can apply for jobs");
+      if (user.role !== 'talent') {
+          toast.error("Only talent can apply for jobs");
           return;
       }
       setIsApplyOpen(true);
@@ -332,11 +332,11 @@ export default function JobDetailsPage() {
                         </Button>
                         {!user ? (
                             <p className="text-xs text-center text-muted-foreground mt-3">
-                                Please login as a Developer to apply
+                                Please login as a talent to apply
                             </p>
-                        ) : user.role !== 'developer' && (
+                        ) : user.role !== 'talent' && (
                              <p className="text-xs text-center text-destructive/80 mt-3">
-                                Account type: {user.role}. Only developers can apply.
+                                Account type: {user.role}. Only talent can apply.
                             </p>
                         )}
                     </div>

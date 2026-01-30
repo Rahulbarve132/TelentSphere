@@ -35,10 +35,10 @@ const registerSchema = Joi.object({
       'any.required': 'Please confirm your password',
     }),
   role: Joi.string()
-    .valid('developer', 'client', 'recruiter')
-    .default('developer')
+    .valid('talent', 'client', 'recruiter')
+    .default('talent')
     .messages({
-      'any.only': 'Role must be developer, client, or recruiter',
+      'any.only': 'Role must be talent, client, or recruiter',
     }),
   firstName: Joi.string()
     .min(2)

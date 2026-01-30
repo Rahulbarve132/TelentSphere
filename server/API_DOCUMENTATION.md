@@ -54,7 +54,7 @@ POST /api/auth/register
   "confirmPassword": "Password@123",
   "firstName": "John",
   "lastName": "Doe",
-  "role": "developer"
+  "role": "talent"
 }
 ```
 
@@ -65,7 +65,7 @@ POST /api/auth/register
 | confirmPassword | string | ✅ | Must match password |
 | firstName | string | ✅ | 2-50 characters |
 | lastName | string | ✅ | 2-50 characters |
-| role | string | ❌ | `developer` (default), `client`, `recruiter` |
+| role | string | ❌ | `talent` (default), `client`, `recruiter` |
 
 **Success Response (201):**
 ```json
@@ -76,7 +76,7 @@ POST /api/auth/register
     "user": {
       "id": "64abc...",
       "email": "user@example.com",
-      "role": "developer",
+      "role": "talent",
       "isVerified": false
     }
   }
@@ -107,7 +107,7 @@ POST /api/auth/login
     "user": {
       "id": "64abc...",
       "email": "user@example.com",
-      "role": "developer",
+      "role": "talent",
       "isVerified": true
     },
     "profile": {
@@ -136,7 +136,7 @@ Authorization: Bearer <token>
     "user": {
       "id": "64abc...",
       "email": "user@example.com",
-      "role": "developer",
+      "role": "talent",
       "isVerified": true,
       "isActive": true,
       "createdAt": "2024-01-01T00:00:00.000Z"
@@ -749,7 +749,7 @@ Authorization: Bearer <admin_token>
       "totalApplications": 320
     },
     "usersByRole": [
-      { "_id": "developer", "count": 100 },
+      { "_id": "talent", "count": 100 },
       { "_id": "client", "count": 40 },
       { "_id": "recruiter", "count": 10 }
     ],
@@ -766,7 +766,7 @@ Authorization: Bearer <admin_token>
 ### Get All Users (Admin)
 ```
 GET /api/admin/users
-GET /api/admin/users?role=developer&isActive=true&search=john
+GET /api/admin/users?role=talent&isActive=true&search=john
 Authorization: Bearer <admin_token>
 ```
 

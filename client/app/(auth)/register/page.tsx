@@ -41,7 +41,7 @@ const registerSchema = z.object({
     .regex(/[0-9]/, { message: "Must contain at least one number" })
     .regex(/[@$!%*?&]/, { message: "Must contain at least one special character" }),
   confirmPassword: z.string(),
-  role: z.enum(["developer", "client", "recruiter"]),
+  role: z.enum(["talent", "client", "recruiter"]),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -67,7 +67,7 @@ export default function RegisterPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "developer",
+      role: "talent",
     },
   });
 
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="developer">Developer (Looking for jobs)</SelectItem>
+                        <SelectItem value="talent">Talent (Looking for jobs)</SelectItem>
                         <SelectItem value="client">Client (Hiring talent)</SelectItem>
                         <SelectItem value="recruiter">Recruiter</SelectItem>
                       </SelectContent>

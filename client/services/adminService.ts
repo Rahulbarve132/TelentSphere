@@ -4,7 +4,7 @@ import { APIResponse } from "@/types/api";
 export interface BroadcastData {
     title: string;
     message: string;
-    role?: 'client' | 'developer' | 'recruiter' | 'all';
+    role?: 'client' | 'talent' | 'recruiter' | 'all';
     link?: string;
 }
 

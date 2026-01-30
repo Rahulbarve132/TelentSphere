@@ -71,8 +71,8 @@ export default function Dashboard() {
              ]);
            }
         } 
-        else if (user?.role === 'developer') {
-            // Fetch developer stats (User Applications)
+        else if (user?.role === 'talent') {
+            // Fetch talent stats (User Applications)
             const appsResponse = await api.get('/applications/my-applications');
             const myApps = appsResponse.data.data?.applications || [];
             
@@ -129,14 +129,14 @@ export default function Dashboard() {
             Welcome back, {user?.firstName || "User"}! 👋
           </h1>
           <p className="text-muted-foreground mt-1">
-             {user?.role === 'developer' 
+             {user?.role === 'talent' 
                 ? "Here's what's happening with your job search today." 
                 : user?.role === 'admin' 
                 ? "Here is the system overview and latest statistics."
                 : "Overview of your hiring pipeline and job performance."}
           </p>
         </div>
-        {user?.role === 'developer' ? (
+        {user?.role === 'talent' ? (
            <Link href="/jobs">
               <Button className="rounded-full shadow-lg shadow-primary/20">
               Find New Jobs <ArrowRight className="ml-2 w-4 h-4" />
@@ -195,11 +195,11 @@ export default function Dashboard() {
                            <div key={role._id} className="flex items-center justify-between">
                                <div className="flex items-center gap-2">
                                    <div className={`p-1.5 rounded-md ${
-                                       role._id === 'developer' ? 'bg-blue-500/10 text-blue-500' :
+                                       role._id === 'talent' ? 'bg-blue-500/10 text-blue-500' :
                                        role._id === 'client' ? 'bg-purple-500/10 text-purple-500' :
                                        'bg-orange-500/10 text-orange-500' // admin/other
                                    }`}>
-                                       {role._id === 'developer' ? <Code2Icon /> : 
+                                       {role._id === 'talent' ? <Code2Icon /> : 
                                         role._id === 'client' ? <BriefcaseIcon /> : <ShieldCheckIcon />}
                                    </div>
                                    <span className="capitalize font-medium">{role._id}</span>
@@ -317,8 +317,8 @@ export default function Dashboard() {
       {user?.role !== 'admin' && (
       <div className="grid md:grid-cols-7 gap-8">
         
-        {/* DEVELOPER DASHBOARD CONTENT */}
-        {user?.role === 'developer' && (
+        {/* TALENT DASHBOARD CONTENT */}
+        {user?.role === 'talent' && (
             <>
                 {/* Recent Activity (using 'activities' state) */}
                 <Card className="md:col-span-4 border-border/50 bg-card/50 backdrop-blur-sm">
