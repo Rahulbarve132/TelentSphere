@@ -164,9 +164,9 @@ export default function RegisterPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="talent">Talent (Looking for jobs)</SelectItem>
-                        <SelectItem value="client">Client (Hiring talent)</SelectItem>
-                        <SelectItem value="recruiter">Recruiter</SelectItem>
+                        <SelectItem value="talent">Talent (Looking for Jobs)</SelectItem>
+                        <SelectItem value="client">Client (Posting Freelance Projects)</SelectItem>
+                        <SelectItem value="recruiter">Recruiter (Hiring Talent)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

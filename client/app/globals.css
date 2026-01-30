@@ -127,3 +127,30 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Animations */
+@keyframes scroll-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-scroll-vertical {
+  animation: scroll-vertical 20s linear infinite;
+}
+
+@keyframes scroll-vertical-reverse {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-scroll-vertical-reverse {
+  animation: scroll-vertical-reverse 20s linear infinite;
+}

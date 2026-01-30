@@ -8,6 +8,7 @@ import { JobCard } from "@/components/jobs/JobCard";
 import { PremiumCandidates } from "@/components/home/PremiumCandidates";
 import { Testimonials } from "@/components/home/Testimonials";
 import { FAQ } from "@/components/home/FAQ";
+import { RecruiterLogos } from "@/components/home/RecruiterLogos";
 
 export default function Home() {
   return (
@@ -66,7 +67,8 @@ export default function Home() {
         </div>
       </section>
 
-      
+      {/* Recruiter Logos */}
+      <RecruiterLogos />
 
       {/* Features Preview */}
       <section className="py-24 bg-muted/30">
