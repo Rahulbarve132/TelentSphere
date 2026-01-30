@@ -9,6 +9,7 @@ import { PremiumCandidates } from "@/components/home/PremiumCandidates";
 import { Testimonials } from "@/components/home/Testimonials";
 import { FAQ } from "@/components/home/FAQ";
 import { RecruiterLogos } from "@/components/home/RecruiterLogos";
+import { ClientLogos } from "@/components/home/ClientLogos";
 
 export default function Home() {
   return (
@@ -69,6 +70,9 @@ export default function Home() {
 
       {/* Recruiter Logos */}
       <RecruiterLogos />
+
+      {/* Client Logos */}
+      <ClientLogos />
 
       {/* Features Preview */}
       <section className="py-24 bg-muted/30">

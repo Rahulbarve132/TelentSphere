@@ -128,7 +128,31 @@
   }
 }
 
-/* Custom Animations */
+@layer utilities {
+  .mask-linear-gradient {
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  }
+  .mask-linear-gradient-horizontal {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  /* Custom Animations */
+  .animate-scroll-vertical {
+    animation: scroll-vertical 20s linear infinite;
+  }
+  .animate-scroll-vertical-reverse {
+    animation: scroll-vertical-reverse 20s linear infinite;
+  }
+  .animate-scroll-horizontal {
+    animation: scroll-horizontal 20s linear infinite;
+  }
+  .animate-scroll-horizontal-reverse {
+    animation: scroll-horizontal-reverse 20s linear infinite;
+  }
+}
+
+/* Keyframes */
 @keyframes scroll-vertical {
   from {
     transform: translateY(0);
@@ -136,10 +160,6 @@
   to {
     transform: translateY(-50%);
   }
-}
-
-.animate-scroll-vertical {
-  animation: scroll-vertical 20s linear infinite;
 }
 
 @keyframes scroll-vertical-reverse {
@@ -151,6 +171,20 @@
   }
 }
 
-.animate-scroll-vertical-reverse {
-  animation: scroll-vertical-reverse 20s linear infinite;
+@keyframes scroll-horizontal {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-horizontal-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }

@@ -21,7 +21,7 @@ const companies = [
 ];
 
 // Duplicate for seamless loop
-const allCompanies = [...companies, ...companies, ...companies];
+const allCompanies = [...companies, ...companies];
 
 export const RecruiterLogos = () => {
   return (
