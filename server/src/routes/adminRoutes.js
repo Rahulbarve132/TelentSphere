@@ -13,6 +13,7 @@ router.get('/dashboard', adminController.getDashboard);
 // Users management
 router.get('/users', adminController.getAllUsers);
 router.put('/users/:id/status', adminController.updateUserStatus);
+router.put('/users/:id/verify', adminController.updateUserVerification);
 
 // Jobs management
 router.get('/jobs', adminController.getAllJobs);

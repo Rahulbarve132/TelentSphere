@@ -15,6 +15,7 @@ import {
   LogOut,
   Megaphone,
   Bell,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -102,6 +103,11 @@ const adminItems = [
     title: "Overview",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Users Management",
+    href: "/dashboard/admin/users",
+    icon: Users,
   },
   {
     title: "Broadcast",

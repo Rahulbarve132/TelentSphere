@@ -47,10 +47,11 @@ const getDashboard = catchAsync(async (req, res, next) => {
  * @access  Private/Admin
  */
 const getAllUsers = catchAsync(async (req, res, next) => {
-  const { page = 1, limit = 20, role, isActive, search } = req.query;
+  const { page = 1, limit = 20, role, isActive, isVerified, search } = req.query;
   const query = {};
   if (role) query.role = role;
   if (isActive !== undefined) query.isActive = isActive === 'true';
+  if (isVerified !== undefined) query.isVerified = isVerified === 'true';
   if (search) query.email = { $regex: search, $options: 'i' };
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -84,6 +85,32 @@ const updateUserStatus = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   res.status(200).json({ success: true, message: 'User status updated', data: { user } });
+});
+
+/**
+ * @desc    Update user verification status
+ * @route   PUT /api/admin/users/:id/verify
+ * @access  Private/Admin
+ */
+const updateUserVerification = catchAsync(async (req, res, next) => {
+  const { isVerified } = req.body;
+  
+  if (isVerified === undefined) {
+    return next(AppError.badRequest('isVerified field is required'));
+  }
+
+  const user = await User.findById(req.params.id);
+  if (!user) return next(AppError.notFound('User not found'));
+  if (user.role === 'admin') return next(AppError.forbidden('Cannot modify admin verification status'));
+
+  user.isVerified = isVerified;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json({ 
+    success: true, 
+    message: `User ${isVerified ? 'verified' : 'unverified'} successfully`, 
+    data: { user } 
+  });
 });
 
 /**
@@ -218,6 +245,7 @@ module.exports = {
   getDashboard,
   getAllUsers,
   updateUserStatus,
+  updateUserVerification,
   getAllJobs,
   moderateJob,
   getAnalytics,
