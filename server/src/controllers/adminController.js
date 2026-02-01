@@ -119,9 +119,11 @@ const updateUserVerification = catchAsync(async (req, res, next) => {
  * @access  Private/Admin
  */
 const getAllJobs = catchAsync(async (req, res, next) => {
-  const { page = 1, limit = 20, status } = req.query;
+  const { page = 1, limit = 20, status, type, visibility } = req.query;
   const query = {};
   if (status) query.status = status;
+  if (type) query.type = type;
+  if (visibility) query.visibility = visibility;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const [jobs, total] = await Promise.all([

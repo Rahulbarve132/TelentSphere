@@ -110,6 +110,11 @@ const adminItems = [
     icon: Users,
   },
   {
+    title: "All Jobs",
+    href: "/dashboard/admin/all-jobs",
+    icon: Briefcase,
+  },
+  {
     title: "Broadcast",
     href: "/dashboard/admin/broadcast",
     icon: Megaphone,
