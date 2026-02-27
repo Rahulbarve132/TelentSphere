@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,10 @@ import { Label } from "@/components/ui/label";
 import { 
   Camera, Plus, Trash2, Save, Loader2, X, 
   Linkedin, Github, Twitter, Globe, Building, 
-  GraduationCap, Briefcase 
+  GraduationCap, Briefcase, Upload, ImageOff
 } from "lucide-react";
 import { profileService } from "@/services/profileService";
+import { companyService, CompanyData } from "@/services/companyService";
 import { UserProfile, UpdateProfileData, Experience, Education } from "@/types/user";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -30,14 +31,119 @@ export default function ProfilePage() {
   const [showExpModal, setShowExpModal] = useState(false);
   const [showEduModal, setShowEduModal] = useState(false);
 
+  // Company state (for recruiter role)
+  const [company, setCompany] = useState<CompanyData & { _id?: string; logo?: string; verificationStatus?: string } | null>(null);
+  const [companyLoading, setCompanyLoading] = useState(false);
+  const [companySaving, setCompanySaving] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
   const { register, handleSubmit, reset, watch, formState: { isSubmitting } } = useForm<UpdateProfileData>();
+  const { register: registerCompany, handleSubmit: handleSubmitCompany, reset: resetCompany, watch: watchCompany } = useForm<CompanyData>();
 
   useEffect(() => {
     const userId = user?._id || user?.id;
     if (userId) {
       loadProfile();
     }
-  }, [user?._id, user?.id]);
+    if (user?.role === 'recruiter') {
+      loadCompany();
+    }
+  }, [user?._id, user?.id, user?.role]);
+
+  const loadCompany = async () => {
+    setCompanyLoading(true);
+    try {
+      const res = await companyService.getMyCompany();
+      if (res.success && res.data?.company) {
+        const c = res.data.company;
+        setCompany(c);
+        resetCompany({
+          name: c.name || '',
+          website: c.website || '',
+          size: c.size || '',
+          industry: c.industry || '',
+          description: c.description || '',
+          city: c.city || '',
+          contactEmail: c.contactEmail || '',
+          isIndependentPractitioner: c.isIndependentPractitioner || false,
+          verificationMethod: c.verificationMethod || 'none',
+          verifiedWebsite: c.verifiedWebsite || '',
+          verifiedSocialMedia: {
+            platform: c.verifiedSocialMedia?.platform || '',
+            url: c.verifiedSocialMedia?.url || '',
+            followers: c.verifiedSocialMedia?.followers,
+          },
+        });
+      }
+    } catch (err: any) {
+      // 404 means not onboarded yet — that's fine
+      if (err?.response?.status !== 404) {
+        toast.error('Failed to load company profile');
+      }
+    } finally {
+      setCompanyLoading(false);
+    }
+  };
+
+  const handleCompanySave = async (data: CompanyData) => {
+    setCompanySaving(true);
+    try {
+      let res;
+      if (company?._id) {
+        // Company already exists — update
+        res = await companyService.updateMyCompany(data);
+      } else {
+        // First save — onboard
+        res = await companyService.onboard(data);
+      }
+      if (res.success) {
+        toast.success('Company profile saved successfully!');
+        // Re-fetch from server to guarantee _id is in state for future PUT calls
+        await loadCompany();
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to save company profile';
+      toast.error(msg);
+    } finally {
+      setCompanySaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo must be smaller than 2 MB');
+      return;
+    }
+    setLogoUploading(true);
+    try {
+      const res = await companyService.uploadLogo(file);
+      if (res.success) {
+        toast.success('Company logo uploaded!');
+        setCompany((prev) => prev ? { ...prev, logo: res.data.company.logo } : res.data.company);
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to upload logo');
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    if (!confirm('Remove company logo?')) return;
+    try {
+      const res = await companyService.deleteLogo();
+      if (res.success) {
+        toast.success('Company logo removed');
+        setCompany((prev) => prev ? { ...prev, logo: undefined } : null);
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to remove logo');
+    }
+  };
 
   const loadProfile = async () => {
     const userId = user?._id || user?.id;
@@ -743,7 +849,103 @@ export default function ProfilePage() {
 
             {/* Full Company Profile (Only for Recruiter role) */}
             {user?.role === 'recruiter' && (
-              <>
+              <div className="space-y-6">
+
+                {/* Company Logo Card */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building className="w-5 h-5" />
+                      Company Logo
+                    </CardTitle>
+                    <CardDescription>Upload your company logo (JPG, PNG, max 2 MB).</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {companyLoading ? (
+                      <div className="flex items-center gap-3 text-muted-foreground text-sm">
+                        <Loader2 className="animate-spin w-5 h-5" />
+                        Loading company profile…
+                      </div>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row items-center gap-6">
+                        {/* Logo preview */}
+                        <div className="relative group shrink-0">
+                          <div className="w-28 h-28 rounded-2xl border-2 border-border/60 bg-muted/40 flex items-center justify-center overflow-hidden shadow-md">
+                            {company?.logo ? (
+                              <img src={company.logo} alt="Company logo" className="w-full h-full object-contain" />
+                            ) : (
+                              <Building className="w-12 h-12 text-muted-foreground/40" />
+                            )}
+                          </div>
+                          {/* Overlay */}
+                          {logoUploading && (
+                            <div className="absolute inset-0 bg-background/70 rounded-2xl flex items-center justify-center">
+                              <Loader2 className="animate-spin w-6 h-6 text-primary" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                          {/* Hidden file input */}
+                          <input
+                            ref={logoInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handleLogoUpload}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            disabled={logoUploading}
+                            onClick={() => logoInputRef.current?.click()}
+                          >
+                            <Upload className="w-4 h-4" />
+                            {company?.logo ? 'Change Logo' : 'Upload Logo'}
+                          </Button>
+                          {company?.logo && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              disabled={logoUploading}
+                              onClick={handleLogoDelete}
+                            >
+                              <ImageOff className="w-4 h-4" />
+                              Remove Logo
+                            </Button>
+                          )}
+                          <p className="text-xs text-muted-foreground">Square image recommended. Max 2 MB.</p>
+                        </div>
+
+                        {/* Verification badge */}
+                        {company?.verificationStatus && (
+                          <div className="sm:ml-auto flex flex-col items-center gap-1">
+                            <span className="text-xs text-muted-foreground font-medium">Verification</span>
+                            <Badge
+                              variant="secondary"
+                              className={
+                                company.verificationStatus === 'verified'
+                                  ? 'bg-green-500/15 text-green-600 border-green-500/30'
+                                  : company.verificationStatus === 'rejected'
+                                  ? 'bg-red-500/15 text-red-600 border-red-500/30'
+                                  : company.verificationStatus === 'pending'
+                                  ? 'bg-yellow-500/15 text-yellow-600 border-yellow-500/30'
+                                  : 'bg-muted text-muted-foreground'
+                              }
+                            >
+                              {company.verificationStatus.charAt(0).toUpperCase() + company.verificationStatus.slice(1)}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
                 {/* Company Identity */}
                 <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                   <CardHeader>
@@ -759,7 +961,7 @@ export default function ProfilePage() {
                         <Label htmlFor="co-name">Company Name *</Label>
                         <Input
                           id="co-name"
-                          {...register("company.name")}
+                          {...registerCompany("name")}
                           placeholder="Acme Corporation"
                         />
                       </div>
@@ -767,7 +969,7 @@ export default function ProfilePage() {
                         <Label htmlFor="co-website">Company Website *</Label>
                         <Input
                           id="co-website"
-                          {...register("company.website")}
+                          {...registerCompany("website")}
                           placeholder="https://acme.com"
                         />
                       </div>
@@ -778,7 +980,7 @@ export default function ProfilePage() {
                         <Label htmlFor="co-industry">Industry *</Label>
                         <Input
                           id="co-industry"
-                          {...register("company.industry")}
+                          {...registerCompany("industry")}
                           placeholder="e.g. Technology, Healthcare, Finance"
                         />
                       </div>
@@ -786,7 +988,7 @@ export default function ProfilePage() {
                         <Label htmlFor="co-city">City *</Label>
                         <Input
                           id="co-city"
-                          {...register("company.city")}
+                          {...registerCompany("city")}
                           placeholder="San Francisco"
                         />
                       </div>
@@ -797,7 +999,7 @@ export default function ProfilePage() {
                       <select
                         id="co-size"
                         className="w-full p-2 rounded-md border bg-background text-sm"
-                        {...register("company.size")}
+                        {...registerCompany("size")}
                       >
                         <option value="">Select company size</option>
                         <option value="1-10">1–10 employees</option>
@@ -813,12 +1015,12 @@ export default function ProfilePage() {
                       <Label htmlFor="co-description">Company Description *</Label>
                       <Textarea
                         id="co-description"
-                        {...register("company.description")}
+                        {...registerCompany("description")}
                         placeholder="Tell us about your company, mission, and what makes you unique..."
                         className="h-36 resize-none"
                       />
                       <p className="text-xs text-muted-foreground">
-                        {(watch("company.description") as string | undefined)?.length || 0} / 2000 characters
+                        {(watchCompany("description") as string | undefined)?.length || 0} / 2000 characters
                       </p>
                     </div>
                   </CardContent>
@@ -839,7 +1041,7 @@ export default function ProfilePage() {
                       <Input
                         id="co-contactEmail"
                         type="email"
-                        {...register("company.contactEmail")}
+                        {...registerCompany("contactEmail")}
                         placeholder="contact@acme.com"
                       />
                       <p className="text-xs text-muted-foreground">This may differ from your account login email.</p>
@@ -850,7 +1052,7 @@ export default function ProfilePage() {
                         id="co-independent"
                         type="checkbox"
                         className="w-4 h-4 accent-primary"
-                        {...register("company.isIndependentPractitioner")}
+                        {...registerCompany("isIndependentPractitioner")}
                       />
                       <div>
                         <Label htmlFor="co-independent" className="font-medium cursor-pointer">
@@ -871,36 +1073,15 @@ export default function ProfilePage() {
                       <Building className="w-5 h-5" />
                       Verification
                     </CardTitle>
-                    <CardDescription>Your company verification status and method.</CardDescription>
+                    <CardDescription>Your company verification method.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/30">
-                      <span className="text-sm font-medium text-muted-foreground">Status:</span>
-                      <Badge
-                        variant="secondary"
-                        className={
-                          profile?.company?.verificationStatus === 'verified'
-                            ? 'bg-green-500/15 text-green-600 border-green-500/30'
-                            : profile?.company?.verificationStatus === 'rejected'
-                            ? 'bg-red-500/15 text-red-600 border-red-500/30'
-                            : profile?.company?.verificationStatus === 'pending'
-                            ? 'bg-yellow-500/15 text-yellow-600 border-yellow-500/30'
-                            : 'bg-muted text-muted-foreground'
-                        }
-                      >
-                        {profile?.company?.verificationStatus
-                          ? profile.company.verificationStatus.charAt(0).toUpperCase() +
-                            profile.company.verificationStatus.slice(1)
-                          : 'Unverified'}
-                      </Badge>
-                    </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="co-verificationMethod">Verification Method *</Label>
                       <select
                         id="co-verificationMethod"
                         className="w-full p-2 rounded-md border bg-background text-sm"
-                        {...register("company.verificationMethod")}
+                        {...registerCompany("verificationMethod")}
                       >
                         <option value="none">None</option>
                         <option value="website">Website</option>
@@ -913,7 +1094,7 @@ export default function ProfilePage() {
                       <Label htmlFor="co-verifiedWebsite">Verified Website URL</Label>
                       <Input
                         id="co-verifiedWebsite"
-                        {...register("company.verifiedWebsite")}
+                        {...registerCompany("verifiedWebsite")}
                         placeholder="https://yourverifiedsite.com"
                       />
                     </div>
@@ -925,7 +1106,7 @@ export default function ProfilePage() {
                           <Label htmlFor="co-smPlatform" className="text-xs text-muted-foreground">Platform</Label>
                           <Input
                             id="co-smPlatform"
-                            {...register("company.verifiedSocialMedia.platform")}
+                            {...registerCompany("verifiedSocialMedia.platform")}
                             placeholder="e.g. LinkedIn"
                           />
                         </div>
@@ -933,7 +1114,7 @@ export default function ProfilePage() {
                           <Label htmlFor="co-smUrl" className="text-xs text-muted-foreground">Profile URL</Label>
                           <Input
                             id="co-smUrl"
-                            {...register("company.verifiedSocialMedia.url")}
+                            {...registerCompany("verifiedSocialMedia.url")}
                             placeholder="https://linkedin.com/company/acme"
                           />
                         </div>
@@ -942,7 +1123,7 @@ export default function ProfilePage() {
                           <Input
                             id="co-smFollowers"
                             type="number"
-                            {...register("company.verifiedSocialMedia.followers")}
+                            {...registerCompany("verifiedSocialMedia.followers")}
                             placeholder="5000"
                           />
                         </div>
@@ -950,7 +1131,20 @@ export default function ProfilePage() {
                     </div>
                   </CardContent>
                 </Card>
-              </>
+
+                {/* Save Company Button */}
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    onClick={() => handleSubmitCompany(handleCompanySave)()}
+                    disabled={companySaving}
+                    className="gap-2 shadow-lg shadow-primary/20"
+                  >
+                    {companySaving ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
+                    {company?._id ? 'Update Company Profile' : 'Save Company Profile'}
+                  </Button>
+                </div>
+              </div>
             )}
 
         </div>

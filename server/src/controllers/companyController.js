@@ -3,15 +3,34 @@ const path = require('path');
 const { Profile } = require('../models');
 const { AppError, catchAsync } = require('../utils');
 
+// ─── Helper ───────────────────────────────────────────────────────────────────
+/**
+ * Formats a profile + company into a consistent response shape.
+ * Surfaces `companyId` (= company._id) as a top-level key so clients
+ * can reference companies directly without knowing the profileId.
+ */
+const formatCompany = (profile) => ({
+  companyId: profile.company._id,
+  profileId: profile._id,
+  owner: {
+    userId: profile.user?._id ?? profile.user,
+    email:  profile.user?.email,
+    role:   profile.user?.role,
+    name:   `${profile.firstName} ${profile.lastName}`,
+  },
+  company: profile.company,
+});
+
+// ─── Self-service ─────────────────────────────────────────────────────────────
+
 /**
  * @desc    Onboard / create company profile for authenticated recruiter or client
  * @route   POST /api/company/onboard
- * @access  Private (recruiter | client)
+ * @access  Private (recruiter | client | admin)
  */
 const onboardCompany = catchAsync(async (req, res, next) => {
   const userId = req.user._id;
 
-  // Only recruiters and clients are allowed to onboard a company
   if (!['recruiter', 'client', 'admin'].includes(req.user.role)) {
     return next(AppError.forbidden('Only recruiters and clients can onboard a company'));
   }
@@ -24,7 +43,6 @@ const onboardCompany = catchAsync(async (req, res, next) => {
     );
   }
 
-  // Check if company is already onboarded
   if (profile.company && profile.company.name) {
     return next(AppError.badRequest('Company is already onboarded. Use the update endpoint instead'));
   }
@@ -43,7 +61,6 @@ const onboardCompany = catchAsync(async (req, res, next) => {
     verifiedSocialMedia,
   } = req.body;
 
-  // Build the company object
   profile.company = {
     name,
     website,
@@ -65,7 +82,10 @@ const onboardCompany = catchAsync(async (req, res, next) => {
   res.status(201).json({
     success: true,
     message: 'Company onboarded successfully. Verification is pending review.',
-    data: { company: profile.company },
+    data: {
+      companyId: profile.company._id,
+      company:   profile.company,
+    },
   });
 });
 
@@ -87,14 +107,17 @@ const getMyCompany = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: { company: profile.company },
+    data: {
+      companyId: profile.company._id,
+      company:   profile.company,
+    },
   });
 });
 
 /**
  * @desc    Update company onboarding details
  * @route   PUT /api/company/me
- * @access  Private (recruiter | client)
+ * @access  Private (recruiter | client | admin)
  */
 const updateMyCompany = catchAsync(async (req, res, next) => {
   const userId = req.user._id;
@@ -133,7 +156,7 @@ const updateMyCompany = catchAsync(async (req, res, next) => {
     }
   });
 
-  // If verification method changed, reset verification status to pending
+  // Reset verification status whenever the method changes
   if (req.body.verificationMethod !== undefined) {
     profile.company.verificationStatus = 'pending';
   }
@@ -143,14 +166,17 @@ const updateMyCompany = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: 'Company information updated successfully',
-    data: { company: profile.company },
+    data: {
+      companyId: profile.company._id,
+      company:   profile.company,
+    },
   });
 });
 
 /**
  * @desc    Upload company logo
  * @route   POST /api/company/me/logo
- * @access  Private (recruiter | client)
+ * @access  Private (recruiter | client | admin)
  */
 const uploadCompanyLogo = catchAsync(async (req, res, next) => {
   if (!['recruiter', 'client', 'admin'].includes(req.user.role)) {
@@ -171,12 +197,10 @@ const uploadCompanyLogo = catchAsync(async (req, res, next) => {
     return next(AppError.badRequest('No company found. Please onboard a company first'));
   }
 
-  // Delete old logo if it exists on disk
+  // Delete old logo from disk if it exists
   if (profile.company.logo) {
     const oldPath = path.join(process.cwd(), profile.company.logo);
-    if (fs.existsSync(oldPath)) {
-      fs.unlinkSync(oldPath);
-    }
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
   }
 
   profile.company.logo = `uploads/logos/${req.file.filename}`;
@@ -185,14 +209,17 @@ const uploadCompanyLogo = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: 'Company logo uploaded successfully',
-    data: { logo: profile.company.logo },
+    data: {
+      companyId: profile.company._id,
+      logo:      profile.company.logo,
+    },
   });
 });
 
 /**
  * @desc    Delete company logo
  * @route   DELETE /api/company/me/logo
- * @access  Private (recruiter | client)
+ * @access  Private (recruiter | client | admin)
  */
 const deleteCompanyLogo = catchAsync(async (req, res, next) => {
   if (!['recruiter', 'client', 'admin'].includes(req.user.role)) {
@@ -211,9 +238,7 @@ const deleteCompanyLogo = catchAsync(async (req, res, next) => {
 
   if (profile.company.logo) {
     const logoPath = path.join(process.cwd(), profile.company.logo);
-    if (fs.existsSync(logoPath)) {
-      fs.unlinkSync(logoPath);
-    }
+    if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath);
     profile.company.logo = null;
     await profile.save();
   }
@@ -223,6 +248,8 @@ const deleteCompanyLogo = catchAsync(async (req, res, next) => {
     message: 'Company logo deleted successfully',
   });
 });
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
 
 /**
  * @desc    Admin: Get all companies with optional filters
@@ -241,23 +268,16 @@ const getAllCompanies = catchAsync(async (req, res, next) => {
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  // Match profiles that have a company name set
   const matchStage = { 'company.name': { $exists: true, $ne: null } };
 
-  if (verificationStatus) {
-    matchStage['company.verificationStatus'] = verificationStatus;
-  }
-  if (industry) {
-    matchStage['company.industry'] = { $regex: industry, $options: 'i' };
-  }
-  if (size) {
-    matchStage['company.size'] = size;
-  }
+  if (verificationStatus)  matchStage['company.verificationStatus'] = verificationStatus;
+  if (industry)            matchStage['company.industry'] = { $regex: industry, $options: 'i' };
+  if (size)                matchStage['company.size'] = size;
   if (search) {
     matchStage.$or = [
-      { 'company.name': { $regex: search, $options: 'i' } },
+      { 'company.name':     { $regex: search, $options: 'i' } },
       { 'company.industry': { $regex: search, $options: 'i' } },
-      { 'company.city': { $regex: search, $options: 'i' } },
+      { 'company.city':     { $regex: search, $options: 'i' } },
     ];
   }
 
@@ -271,28 +291,38 @@ const getAllCompanies = catchAsync(async (req, res, next) => {
     Profile.countDocuments(matchStage),
   ]);
 
-  const companies = profiles.map((p) => ({
-    profileId: p._id,
-    owner: {
-      userId: p.user?._id,
-      email: p.user?.email,
-      role: p.user?.role,
-      name: `${p.firstName} ${p.lastName}`,
-    },
-    company: p.company,
-  }));
+  const companies = profiles.map(formatCompany);
 
   res.status(200).json({
     success: true,
     data: {
       companies,
       pagination: {
-        page: parseInt(page),
+        page:  parseInt(page),
         limit: parseInt(limit),
         total,
         pages: Math.ceil(total / parseInt(limit)),
       },
     },
+  });
+});
+
+/**
+ * @desc    Admin: Get a single company by its own companyId (company._id)
+ * @route   GET /api/company/id/:companyId
+ * @access  Private/Admin
+ */
+const getCompanyByCompanyId = catchAsync(async (req, res, next) => {
+  const profile = await Profile.findOne({ 'company._id': req.params.companyId })
+    .populate('user', 'email role isVerified isActive createdAt');
+
+  if (!profile || !profile.company || !profile.company.name) {
+    return next(AppError.notFound('Company not found'));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: formatCompany(profile),
   });
 });
 
@@ -311,33 +341,44 @@ const getCompanyById = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    data: formatCompany(profile),
+  });
+});
+
+/**
+ * @desc    Admin: Update company verification status — by companyId
+ * @route   PATCH /api/company/id/:companyId/verify
+ * @access  Private/Admin
+ */
+const updateVerificationStatusByCompanyId = catchAsync(async (req, res, next) => {
+  const { verificationStatus } = req.body;
+
+  const profile = await Profile.findOne({ 'company._id': req.params.companyId });
+
+  if (!profile || !profile.company || !profile.company.name) {
+    return next(AppError.notFound('Company not found'));
+  }
+
+  profile.company.verificationStatus = verificationStatus;
+  await profile.save();
+
+  res.status(200).json({
+    success: true,
+    message: `Company verification status updated to "${verificationStatus}"`,
     data: {
-      profileId: profile._id,
-      owner: {
-        userId: profile.user?._id,
-        email: profile.user?.email,
-        role: profile.user?.role,
-        name: `${profile.firstName} ${profile.lastName}`,
-      },
-      company: profile.company,
+      companyId: profile.company._id,
+      company:   profile.company,
     },
   });
 });
 
 /**
- * @desc    Admin: Update company verification status
+ * @desc    Admin: Update company verification status — by profileId
  * @route   PATCH /api/company/:profileId/verify
  * @access  Private/Admin
  */
 const updateVerificationStatus = catchAsync(async (req, res, next) => {
   const { verificationStatus } = req.body;
-
-  const allowedStatuses = ['pending', 'verified', 'rejected', 'unverified'];
-  if (!allowedStatuses.includes(verificationStatus)) {
-    return next(
-      AppError.badRequest(`Invalid status. Must be one of: ${allowedStatuses.join(', ')}`)
-    );
-  }
 
   const profile = await Profile.findById(req.params.profileId);
 
@@ -351,12 +392,41 @@ const updateVerificationStatus = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: `Company verification status updated to "${verificationStatus}"`,
-    data: { company: profile.company },
+    data: {
+      companyId: profile.company._id,
+      company:   profile.company,
+    },
   });
 });
 
 /**
- * @desc    Admin: Delete a company (clears company data from profile)
+ * @desc    Admin: Delete a company by companyId (clears company data from profile)
+ * @route   DELETE /api/company/id/:companyId
+ * @access  Private/Admin
+ */
+const deleteCompanyByCompanyId = catchAsync(async (req, res, next) => {
+  const profile = await Profile.findOne({ 'company._id': req.params.companyId });
+
+  if (!profile || !profile.company || !profile.company.name) {
+    return next(AppError.notFound('Company not found'));
+  }
+
+  if (profile.company.logo) {
+    const logoPath = path.join(process.cwd(), profile.company.logo);
+    if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath);
+  }
+
+  profile.company = undefined;
+  await profile.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Company removed successfully',
+  });
+});
+
+/**
+ * @desc    Admin: Delete a company by profileId
  * @route   DELETE /api/company/:profileId
  * @access  Private/Admin
  */
@@ -367,12 +437,9 @@ const deleteCompany = catchAsync(async (req, res, next) => {
     return next(AppError.notFound('Company not found'));
   }
 
-  // Delete logo from disk if present
   if (profile.company.logo) {
     const logoPath = path.join(process.cwd(), profile.company.logo);
-    if (fs.existsSync(logoPath)) {
-      fs.unlinkSync(logoPath);
-    }
+    if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath);
   }
 
   profile.company = undefined;
@@ -390,8 +457,13 @@ module.exports = {
   updateMyCompany,
   uploadCompanyLogo,
   deleteCompanyLogo,
+  // Admin — by profileId
   getAllCompanies,
   getCompanyById,
   updateVerificationStatus,
   deleteCompany,
+  // Admin — by companyId
+  getCompanyByCompanyId,
+  updateVerificationStatusByCompanyId,
+  deleteCompanyByCompanyId,
 };

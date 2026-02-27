@@ -1,5 +1,76 @@
 const mongoose = require('mongoose');
 
+// ─── Company sub-document schema ─────────────────────────────────────────────
+// Defined as a named Schema so Mongoose auto-generates _id (companyId) for it.
+const companySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Company name is required'],
+    trim: true,
+  },
+  website: {
+    type: String,
+    required: [true, 'Company website is required'],
+    trim: true,
+  },
+  size: {
+    type: String,
+    required: [true, 'Company size is required'],
+    enum: ['1-10', '11-50', '51-200', '201-500', '500+', '1', '2-10', '501-1000', '1000+'],
+  },
+  industry: {
+    type: String,
+    required: [true, 'Industry is required'],
+    trim: true,
+  },
+  description: {
+    type: String,
+    required: [true, 'Company description is required'],
+    maxlength: [2000, 'Company description cannot exceed 2000 characters'],
+  },
+  city: {
+    type: String,
+    required: [true, 'Company city is required'],
+    trim: true,
+  },
+  logo: {
+    type: String,
+    default: null,
+  },
+  isIndependentPractitioner: {
+    type: Boolean,
+    required: [true, 'Please specify if this is an independent practitioner'],
+    default: false,
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['pending', 'verified', 'rejected', 'unverified'],
+    default: 'unverified',
+  },
+  verificationMethod: {
+    type: String,
+    required: [true, 'Verification method is required'],
+    enum: ['website', 'social_media', 'document', 'none'],
+    default: 'none',
+  },
+  verifiedWebsite: {
+    type: String,
+    trim: true,
+  },
+  verifiedSocialMedia: {
+    platform: { type: String },
+    url:      { type: String },
+    followers:{ type: Number },
+  },
+  contactEmail: {
+    type: String,
+    required: [true, 'Company contact email is required'],
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid contact email'],
+  },
+});
+
 const experienceSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -111,83 +182,9 @@ const profileSchema = new mongoose.Schema(
       enum: ['available', 'busy', 'not-available'],
       default: 'available',
     },
-    // For recruiters only - comprehensive company info with verification
-    company: {
-      name: {
-        type: String,
-        required: [true, 'Company name is required'],
-        trim: true,
-      },
-      website: {
-        type: String,
-        required: [true, 'Company website is required'],
-        trim: true,
-      },
-      size: {
-        type: String,
-        required: [true, 'Company size is required'],
-        enum: ['1-10', '11-50', '51-200', '201-500', '500+', '1', '2-10', '501-1000', '1000+'],
-      },
-      industry: {
-        type: String,
-        required: [true, 'Industry is required'],
-        trim: true,
-      },
-      description: {
-        type: String,
-        required: [true, 'Company description is required'],
-        maxlength: [2000, 'Company description cannot exceed 2000 characters'],
-      },
-      city: {
-        type: String,
-        required: [true, 'Company city is required'],
-        trim: true,
-      },
-      logo: {
-        type: String,
-        default: null,
-      },
-      // Additional fields for organization verification
-      isIndependentPractitioner: {
-        type: Boolean,
-        required: [true, 'Please specify if this is an independent practitioner'],
-        default: false,
-      },
-      verificationStatus: {
-        type: String,
-        enum: ['pending', 'verified', 'rejected', 'unverified'],
-        default: 'unverified',
-      },
-      verificationMethod: {
-        type: String,
-        required: [true, 'Verification method is required'],
-        enum: ['website', 'social_media', 'document', 'none', null],
-        default: null,
-      },
-      verifiedWebsite: {
-        type: String,
-        trim: true,
-      },
-      verifiedSocialMedia: {
-        platform: {
-          type: String,
-        },
-        url: {
-          type: String,
-        },
-        followers: {
-          type: Number,
-        },
-      },
-      // Company contact email (may be different from user email)
-      contactEmail: {
-        type: String,
-        required: [true, 'Company contact email is required'],
-        trim: true,
-        lowercase: true,
-        match: [/^\S+@\S+\.\S+$/, 'Please provide a valid contact email'],
-      },
-    },
+    // For recruiters / clients — comprehensive company info with verification.
+    // Uses companySchema so Mongoose auto-generates a unique _id (companyId).
+    company: companySchema,
   },
   {
     timestamps: true,

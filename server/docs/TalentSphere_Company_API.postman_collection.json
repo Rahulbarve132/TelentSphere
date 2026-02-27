@@ -1,0 +1,1159 @@
+{
+    "info": {
+        "_postman_id": "talentsphere-company-api",
+        "name": "TalentSphere — Company API",
+        "description": "Full test suite for the TalentSphere Company Onboarding API.\n\n**Setup:**\n1. Set the `base_url` variable to your server URL (default: http://localhost:5000)\n2. Run **Auth / Login** first — the collection auto-saves the token to `access_token`.\n3. All protected requests use Bearer token auth from that variable.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "admin_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "profile_id",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "🔐 Auth (setup)",
+            "item": [
+                {
+                    "name": "Login as Recruiter",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.data && res.data.accessToken) {",
+                                    "  pm.collectionVariables.set('access_token', res.data.accessToken);",
+                                    "  console.log('✅ access_token saved');",
+                                    "} else if (pm.cookies.get('accessToken')) {",
+                                    "  pm.collectionVariables.set('access_token', pm.cookies.get('accessToken'));",
+                                    "  console.log('✅ access_token saved from cookie');",
+                                    "}",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Login successful', () => pm.expect(res.success).to.be.true);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"recruiter@example.com\",\n  \"password\": \"Password123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login as Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.data && res.data.accessToken) {",
+                                    "  pm.collectionVariables.set('admin_token', res.data.accessToken);",
+                                    "  console.log('✅ admin_token saved');",
+                                    "}",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Login successful', () => pm.expect(res.success).to.be.true);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🏢 Self-Service (Recruiter / Client)",
+            "item": [
+                {
+                    "name": "1. Onboard Company",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                                    "pm.test('Success true', () => pm.expect(res.success).to.be.true);",
+                                    "pm.test('Company name present', () => pm.expect(res.data.company.name).to.eql('Acme Corp'));",
+                                    "pm.test('Verification status is pending', () => pm.expect(res.data.company.verificationStatus).to.eql('pending'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Acme Corp\",\n  \"website\": \"https://acme.com\",\n  \"size\": \"51-200\",\n  \"industry\": \"Technology\",\n  \"description\": \"We build innovative software solutions for enterprises worldwide.\",\n  \"city\": \"Mumbai\",\n  \"isIndependentPractitioner\": false,\n  \"contactEmail\": \"hr@acme.com\",\n  \"verificationMethod\": \"website\",\n  \"verifiedWebsite\": \"https://acme.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/onboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "onboard"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1a. Onboard — Independent Practitioner",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                                    "pm.test('isIndependentPractitioner true', () => pm.expect(res.data.company.isIndependentPractitioner).to.be.true);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe Consulting\",\n  \"website\": \"https://johndoe.dev\",\n  \"size\": \"1-10\",\n  \"industry\": \"Consulting\",\n  \"description\": \"Independent full-stack consultant specializing in Node.js and React.\",\n  \"city\": \"Pune\",\n  \"isIndependentPractitioner\": true,\n  \"contactEmail\": \"john@johndoe.dev\",\n  \"verificationMethod\": \"social_media\",\n  \"verifiedSocialMedia\": {\n    \"platform\": \"LinkedIn\",\n    \"url\": \"https://linkedin.com/in/johndoe\",\n    \"followers\": 3200\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/onboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "onboard"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1b. Onboard — Validation Error (missing required fields)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                                    "pm.test('Error returned', () => pm.expect(pm.response.json().success).to.be.false);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Incomplete Corp\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/onboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "onboard"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "1c. Onboard — Duplicate (already onboarded)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                                    "pm.test('Duplicate error', () => pm.expect(pm.response.json().message).to.include('already onboarded'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Acme Corp Again\",\n  \"website\": \"https://acme2.com\",\n  \"size\": \"11-50\",\n  \"industry\": \"Tech\",\n  \"description\": \"Trying to onboard again.\",\n  \"city\": \"Delhi\",\n  \"isIndependentPractitioner\": false,\n  \"contactEmail\": \"contact@acme2.com\",\n  \"verificationMethod\": \"none\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/onboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "onboard"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Get My Company",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Success true', () => pm.expect(res.success).to.be.true);",
+                                    "pm.test('Company object returned', () => pm.expect(res.data.company).to.be.an('object'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Update My Company",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Success true', () => pm.expect(res.success).to.be.true);",
+                                    "pm.test('City updated', () => pm.expect(res.data.company.city).to.eql('Bangalore'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"city\": \"Bangalore\",\n  \"description\": \"We build innovative software solutions — now based in Bangalore.\",\n  \"size\": \"201-500\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3a. Update — Change Verification Method (resets to pending)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Verification status reset to pending', () => pm.expect(res.data.company.verificationStatus).to.eql('pending'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"verificationMethod\": \"document\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "4. Upload Company Logo",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Logo path returned', () => pm.expect(res.data.logo).to.include('uploads/logos'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "logo",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "Select any .jpg / .png / .webp image from your machine"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/me/logo",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "me",
+                                "logo"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "4a. Upload Logo — Wrong File Type (should fail)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                                    "pm.test('File type error', () => pm.expect(pm.response.json().success).to.be.false);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "logo",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "Select a .pdf or .txt file — should be rejected"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/me/logo",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "me",
+                                "logo"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5. Delete Company Logo",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Logo deleted', () => pm.expect(res.message).to.include('deleted'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company/me/logo",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "me",
+                                "logo"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🛡️ Admin Only",
+            "item": [
+                {
+                    "name": "6. List All Companies",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Companies array returned', () => pm.expect(res.data.companies).to.be.an('array'));",
+                                    "pm.test('Pagination present', () => pm.expect(res.data.pagination).to.be.an('object'));",
+                                    "// Save first profile ID for subsequent tests",
+                                    "if (res.data.companies.length > 0) {",
+                                    "  pm.collectionVariables.set('profile_id', res.data.companies[0].profileId);",
+                                    "  console.log('✅ profile_id saved:', res.data.companies[0].profileId);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "6a. List — Filter by verificationStatus=pending",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('All companies are pending', () => {",
+                                    "  res.data.companies.forEach(c => pm.expect(c.company.verificationStatus).to.eql('pending'));",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company?verificationStatus=pending&page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company"
+                            ],
+                            "query": [
+                                {
+                                    "key": "verificationStatus",
+                                    "value": "pending"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "6b. List — Filter by industry",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company?industry=Technology&page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company"
+                            ],
+                            "query": [
+                                {
+                                    "key": "industry",
+                                    "value": "Technology"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "6c. List — Filter by size",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company?size=51-200",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company"
+                            ],
+                            "query": [
+                                {
+                                    "key": "size",
+                                    "value": "51-200"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "6d. List — Search by keyword",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company?search=Acme",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "Acme"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7. Get Company by Profile ID",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Owner present', () => pm.expect(res.data.owner).to.be.an('object'));",
+                                    "pm.test('Company object present', () => pm.expect(res.data.company).to.be.an('object'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company/{{profile_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "{{profile_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7a. Get Company — Invalid ID (should 404)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company/000000000000000000000000",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "000000000000000000000000"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "8. Approve Company (verified)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Status set to verified', () => pm.expect(res.data.company.verificationStatus).to.eql('verified'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"verificationStatus\": \"verified\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/{{profile_id}}/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "{{profile_id}}",
+                                "verify"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "8a. Reject Company",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Status set to rejected', () => pm.expect(res.data.company.verificationStatus).to.eql('rejected'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"verificationStatus\": \"rejected\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/{{profile_id}}/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "{{profile_id}}",
+                                "verify"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "8b. Verify — Invalid Status (should 400)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"verificationStatus\": \"approved\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/{{profile_id}}/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "{{profile_id}}",
+                                "verify"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "9. Delete Company (Admin)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                                    "pm.test('Success true', () => pm.expect(res.success).to.be.true);",
+                                    "pm.test('Deleted message', () => pm.expect(res.message).to.include('removed'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company/{{profile_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "{{profile_id}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🚫 Auth Guards",
+            "item": [
+                {
+                    "name": "No Token — Onboard (should 401)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Ghost Corp\",\n  \"website\": \"https://ghost.com\",\n  \"size\": \"1-10\",\n  \"industry\": \"Stealth\",\n  \"description\": \"No auth.\",\n  \"city\": \"Nowhere\",\n  \"isIndependentPractitioner\": false,\n  \"contactEmail\": \"ghost@ghost.com\",\n  \"verificationMethod\": \"none\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/onboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "onboard"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Non-Admin accessing GET /api/company (should 403)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/company",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Non-Admin accessing PATCH /verify (should 403)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"verificationStatus\": \"verified\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/company/{{profile_id}}/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "company",
+                                "{{profile_id}}",
+                                "verify"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

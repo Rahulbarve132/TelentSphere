@@ -5,6 +5,7 @@ const applicationController = require('./applicationController');
 const notificationController = require('./notificationController');
 const adminController = require('./adminController');
 const companyController = require('./companyController');
+const contactController = require('./contactController');
 
 module.exports = {
   authController,
@@ -14,4 +15,5 @@ module.exports = {
   notificationController,
   adminController,
   companyController,
+  contactController,
 };

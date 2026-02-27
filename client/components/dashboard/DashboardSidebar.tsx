@@ -16,6 +16,10 @@ import {
   Megaphone,
   Bell,
   Users,
+  Building2,
+  ClipboardList,
+  UserCheck,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -67,6 +71,44 @@ const clientItems = [
     icon: LayoutDashboard,
   },
   {
+    title: "Post a Requirement",
+    href: "/dashboard/post-job",
+    icon: PlusCircle,
+  },
+  {
+    title: "My Projects",
+    href: "/dashboard/jobs",
+    icon: Briefcase,
+  },
+  {
+    title: "Profile",
+    href: "/dashboard/profile",
+    icon: User,
+  },
+  {
+    title: "Messages",
+    href: "/dashboard/messages",
+    icon: MessageSquare,
+  },
+  {
+    title: "Notifications",
+    href: "/dashboard/notifications",
+    icon: Bell,
+  },
+  {
+    title: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+  },
+];
+
+const recruiterItems = [
+  {
+    title: "Overview",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
     title: "Post a Job",
     href: "/dashboard/post-job",
     icon: PlusCircle,
@@ -79,7 +121,7 @@ const clientItems = [
   {
     title: "Company Profile",
     href: "/dashboard/profile",
-    icon: User,
+    icon: Building2,
   },
   {
     title: "Messages",
@@ -124,7 +166,12 @@ const adminItems = [
     href: "/dashboard/jobs",
     icon: Briefcase,
   },
-   {
+  {
+    title: "Contact Messages",
+    href: "/dashboard/admin/messages",
+    icon: Mail,
+  },
+  {
     title: "Profile",
     href: "/dashboard/profile",
     icon: User,
@@ -143,6 +190,8 @@ function SidebarContent({ mobile = false, setOpen }: { mobile?: boolean, setOpen
     let sidebarItems = clientItems;
     if (user?.role === 'talent') {
         sidebarItems = developerItems;
+    } else if (user?.role === 'recruiter') {
+        sidebarItems = recruiterItems;
     } else if (user?.role === 'admin') {
         sidebarItems = adminItems;
     }
@@ -157,7 +206,15 @@ function SidebarContent({ mobile = false, setOpen }: { mobile?: boolean, setOpen
                 </Link>
                 <div className="flex justify-between items-center mt-1">
                     <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-                         {user?.role === 'talent' ? 'Dashboard' : (user?.role === 'admin' ? 'Admin Panel' : 'Business')}
+                         {user?.role === 'talent'
+                           ? 'My Dashboard'
+                           : user?.role === 'recruiter'
+                           ? 'Recruiter'
+                           : user?.role === 'client'
+                           ? 'Client'
+                           : user?.role === 'admin'
+                           ? 'Admin Panel'
+                           : 'Dashboard'}
                     </span>
                     {/* Role Badge if needed */}
                 </div>

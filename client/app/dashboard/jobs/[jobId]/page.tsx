@@ -126,9 +126,6 @@ export default function JobApplicationsPage({ params }: { params: Promise<{ jobI
       // Fetch Applications
       const appsResponse = await api.get(`/applications/job/${jobId}`);
       if (appsResponse.data.success) {
-        console.log('API Response:', appsResponse.data.data.applications);
-        console.log('First Application:', appsResponse.data.data.applications[0].applicantProfile);
-        console.log('First Applicant:', appsResponse.data.data.applications[0]?.applicant);
         setApplications(appsResponse.data.data.applications);
       }
 

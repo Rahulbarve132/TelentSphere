@@ -33,6 +33,11 @@ const {
   updateVerificationStatusSchema,
 } = require('./companyValidation');
 
+const {
+  submitContactSchema,
+  updateContactSchema,
+} = require('./contactValidation');
+
 module.exports = {
   // Auth
   registerSchema,
@@ -59,4 +64,7 @@ module.exports = {
   onboardCompanySchema,
   updateCompanySchema,
   updateVerificationStatusSchema,
+  // Contact
+  submitContactSchema,
+  updateContactSchema,
 };

@@ -88,7 +88,7 @@ export default function Dashboard() {
         else if (user?.role === 'client' || user?.role === 'recruiter') {
              // Fetch client stats (My Jobs)
              const jobsResponse = await api.get('/jobs/user/my-jobs');
-             const myJobs = jobsResponse.data.data || [];
+             const myJobs = Array.isArray(jobsResponse.data.data) ? jobsResponse.data.data : [];
              setJobs(myJobs);
 
              const activeJobsCount = myJobs.filter((job: any) => job.status === 'active').length;
@@ -143,7 +143,7 @@ export default function Dashboard() {
               </Button>
            </Link>
         ) : user?.role === 'admin' ? null : (
-           <Link href="/dashboard/jobs/new">
+           <Link href="/dashboard/post-job">
               <Button className="rounded-full shadow-lg shadow-primary/20">
               Post a Job <PlusCircle className="ml-2 w-4 h-4" />
               </Button>

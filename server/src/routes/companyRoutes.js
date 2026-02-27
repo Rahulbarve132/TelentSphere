@@ -12,12 +12,13 @@ const {
 router.use(authenticate);
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Self-service routes (recruiter / client)
+// Self-service routes  (recruiter / client / admin)
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
  * POST /api/company/onboard
- * Onboard a new company for the authenticated user
+ * Onboard a new company for the authenticated user.
+ * Response includes `companyId` (the auto-generated _id of the company sub-doc).
  */
 router.post(
   '/onboard',
@@ -28,13 +29,13 @@ router.post(
 
 /**
  * GET /api/company/me
- * Get the authenticated user's company
+ * Get the authenticated user's company.  Response includes `companyId`.
  */
 router.get('/me', companyController.getMyCompany);
 
 /**
  * PUT /api/company/me
- * Update the authenticated user's company details
+ * Update the authenticated user's company details.
  */
 router.put(
   '/me',
@@ -65,25 +66,61 @@ router.delete(
 );
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Admin-only routes
+// Admin — lookup by companyId  (company sub-document _id)
+// These routes MUST be declared before /:profileId to avoid conflicts.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/company/id/:companyId
+ * Get a single company directly by its companyId.
+ */
+router.get(
+  '/id/:companyId',
+  authorize('admin'),
+  companyController.getCompanyByCompanyId
+);
+
+/**
+ * PATCH /api/company/id/:companyId/verify
+ * Update verification status by companyId.
+ */
+router.patch(
+  '/id/:companyId/verify',
+  authorize('admin'),
+  validate(updateVerificationStatusSchema),
+  companyController.updateVerificationStatusByCompanyId
+);
+
+/**
+ * DELETE /api/company/id/:companyId
+ * Remove company data by companyId.
+ */
+router.delete(
+  '/id/:companyId',
+  authorize('admin'),
+  companyController.deleteCompanyByCompanyId
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Admin — lookup by profileId  (Profile document _id)
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
  * GET /api/company
- * Get all companies (with optional filters)
- * Query: page, limit, verificationStatus, industry, size, search
+ * List all companies (filters: verificationStatus, industry, size, search, page, limit).
+ * Each item includes `companyId` and `profileId`.
  */
 router.get('/', authorize('admin'), companyController.getAllCompanies);
 
 /**
  * GET /api/company/:profileId
- * Get a single company by profile ID
+ * Get a single company by profile ID.
  */
 router.get('/:profileId', authorize('admin'), companyController.getCompanyById);
 
 /**
  * PATCH /api/company/:profileId/verify
- * Update a company's verification status
+ * Update verification status by profileId.
  */
 router.patch(
   '/:profileId/verify',
@@ -94,7 +131,7 @@ router.patch(
 
 /**
  * DELETE /api/company/:profileId
- * Remove company data from a profile
+ * Remove company data from a profile.
  */
 router.delete('/:profileId', authorize('admin'), companyController.deleteCompany);
 

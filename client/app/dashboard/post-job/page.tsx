@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,12 @@ import {
   ArrowRight, 
   ArrowLeft,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 import api from "@/lib/axios";
 import { toast } from "sonner";
+import { profileService } from "@/services/profileService";
 
 type JobType = 'full-time' | 'part-time' | 'contract' | 'freelance' | 'internship';
 type JobCategory = 'web-development' | 'mobile-development' | 'ui-ux-design' | 'data-science' | 'devops' | 'cloud-computing' | 'cybersecurity' | 'blockchain' | 'ai-ml' | 'game-development' | 'other';
@@ -62,12 +65,54 @@ export default function PostJobPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [companyIncomplete, setCompanyIncomplete] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+
+  // Check company details for recruiter role
+  useEffect(() => {
+    const userId = user?._id || (user as any)?.id;
+    if (user?.role === 'recruiter' && userId) {
+      setProfileLoading(true);
+      profileService.getProfile(userId)
+        .then((data) => {
+          if (data.success && data.data.profile) {
+            const company = data.data.profile.company;
+            const missing: string[] = [];
+            if (!company?.name?.trim())                                    missing.push('Company Name');
+            if (!company?.website?.trim())                                 missing.push('Company Website');
+            if (!company?.size?.trim())                                    missing.push('Company Size');
+            if (!company?.industry?.trim())                                missing.push('Industry');
+            if (!company?.description?.trim())                             missing.push('Company Description');
+            if (!company?.city?.trim())                                    missing.push('City');
+            if (!company?.contactEmail?.trim())                            missing.push('Contact Email');
+            if (!company?.verificationMethod || company.verificationMethod === 'none') missing.push('Verification Method');
+            setMissingFields(missing);
+            setCompanyIncomplete(missing.length > 0);
+          } else {
+            setCompanyIncomplete(true);
+            setMissingFields([
+              'Company Name', 'Company Website', 'Company Size',
+              'Industry', 'Company Description', 'City',
+              'Contact Email', 'Verification Method'
+            ]);
+          }
+        })
+        .catch(() => {
+          setCompanyIncomplete(true);
+          setMissingFields(['Company profile could not be loaded']);
+        })
+        .finally(() => setProfileLoading(false));
+    }
+  }, [user?._id, (user as any)?.id, user?.role]);
   
+  const isClient = user?.role === 'client';
+
   // Form state
   const [formData, setFormData] = useState<JobFormData>({
     title: "",
     description: "",
-    type: "full-time",
+    type: isClient ? "freelance" : "full-time",
     category: "web-development",
     skillsRequired: [],
     experienceLevel: "mid",
@@ -270,6 +315,83 @@ export default function PostJobPage() {
     }
   };
 
+  // Company details gate for recruiter role
+  if (profileLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4 text-muted-foreground">
+          <span className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm">Checking company profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'recruiter' && companyIncomplete) {
+    return (
+      <div className="min-h-screen pb-20">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <Briefcase className="w-8 h-8 text-primary" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Post a New Job
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-lg">
+            Find the perfect talent for your project
+          </p>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 shadow-xl shadow-amber-500/5">
+            <div className="flex flex-col items-center text-center gap-6">
+              {/* Icon */}
+              <div className="w-20 h-20 rounded-full bg-amber-500/15 border-2 border-amber-500/40 flex items-center justify-center">
+                <AlertCircle className="w-10 h-10 text-amber-500" />
+              </div>
+
+              {/* Title */}
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Company Profile Incomplete</h2>
+                <p className="text-muted-foreground">
+                  You need to complete your company profile before you can post a job.
+                  Make sure the following details are filled in:
+                </p>
+              </div>
+
+              {/* Missing fields */}
+              <div className="w-full rounded-xl border border-border/50 bg-background/50 p-4 space-y-2">
+                {missingFields.map((field) => (
+                  <div key={field} className="flex items-center gap-3 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                    <span className="text-foreground/80">{field}</span>
+                    <span className="ml-auto text-xs text-amber-600 font-medium bg-amber-500/10 px-2 py-0.5 rounded-full">Missing</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <Link href="/dashboard/profile" className="flex-1">
+                  <button className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-primary/25">
+                    <ArrowRight className="w-4 h-4" />
+                    Complete Company Profile
+                  </button>
+                </Link>
+                <Link href="/dashboard" className="flex-1">
+                  <button className="w-full h-11 rounded-lg border border-border text-sm font-medium hover:bg-accent transition-colors flex items-center justify-center gap-2">
+                    Go to Dashboard
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-20">
       {/* Header */}
@@ -277,11 +399,11 @@ export default function PostJobPage() {
         <div className="flex items-center gap-2 mb-2">
           <Briefcase className="w-8 h-8 text-primary" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Post a New Job
+            {isClient ? "Post a New Requirement" : "Post a New Job"}
           </h1>
         </div>
         <p className="text-muted-foreground text-lg">
-          Find the perfect talent for your project
+          {isClient ? "Describe your freelance project and find the perfect talent" : "Find the perfect talent for your project"}
         </p>
       </div>
 
@@ -358,30 +480,42 @@ export default function PostJobPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-base">Job Type *</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {jobTypes.map(type => (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, type: type.value })}
-                          className={`
-                            p-3 rounded-lg border-2 transition-all duration-200 text-left
-                            ${formData.type === type.value 
-                              ? 'border-primary bg-primary/10 shadow-md' 
-                              : 'border-border hover:border-primary/50 hover:bg-accent'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{type.icon}</span>
-                            <span className="font-medium text-sm">{type.label}</span>
-                          </div>
-                        </button>
-                      ))}
+                  {/* Job Type: hidden for clients (locked to freelance) */}
+                  {isClient ? (
+                    <div className="space-y-2">
+                      <Label className="text-base">Job Type</Label>
+                      <div className="flex items-center gap-3 h-12 px-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+                        <span className="text-2xl">🚀</span>
+                        <span className="font-semibold text-primary text-sm">Freelance</span>
+                        <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Auto-selected</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label className="text-base">Job Type *</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {jobTypes.map(type => (
+                          <button
+                            key={type.value}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, type: type.value })}
+                            className={`
+                              p-3 rounded-lg border-2 transition-all duration-200 text-left
+                              ${formData.type === type.value 
+                                ? 'border-primary bg-primary/10 shadow-md' 
+                                : 'border-border hover:border-primary/50 hover:bg-accent'
+                              }
+                            `}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">{type.icon}</span>
+                              <span className="font-medium text-sm">{type.label}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="category" className="text-base">Category *</Label>
