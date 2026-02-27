@@ -431,7 +431,8 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            {/* Social Links */}
+            {/* Social Links - hidden for recruiter role */}
+            {user?.role !== 'recruiter' && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -486,11 +487,13 @@ export default function ProfilePage() {
                     </div>
                 </CardContent>
             </Card>
+            )}
 
-            {/* Skills */}
+            {/* Skills - hidden for recruiter role */}
+            {user?.role !== 'recruiter' && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardHeader>
-                    <CardTitle>Skills & Expertise</CardTitle>
+                    <CardTitle>Skills &amp; Expertise</CardTitle>
                     <CardDescription>Add skills to help employers find you.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -541,8 +544,10 @@ export default function ProfilePage() {
                    )}
                 </CardContent>
             </Card>
+            )}
 
-            {/* Work Experience */}
+            {/* Work Experience - hidden for recruiter role */}
+            {user?.role !== 'recruiter' && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
@@ -608,8 +613,10 @@ export default function ProfilePage() {
                     )}
                 </CardContent>
             </Card>
+            )}
 
-            {/* Education */}
+            {/* Education - hidden for recruiter role */}
+            {user?.role !== 'recruiter' && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
@@ -674,9 +681,10 @@ export default function ProfilePage() {
                     )}
                 </CardContent>
             </Card>
+            )}
 
-            {/* Company Information (Only for Clients/Recruiters) */}
-            {(user?.role === 'client' || user?.role === 'recruiter') && (
+            {/* Company Information (for Clients only - basic) */}
+            {user?.role === 'client' && (
               <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                   <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -731,6 +739,218 @@ export default function ProfilePage() {
                       </div>
                   </CardContent>
               </Card>
+            )}
+
+            {/* Full Company Profile (Only for Recruiter role) */}
+            {user?.role === 'recruiter' && (
+              <>
+                {/* Company Identity */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building className="w-5 h-5" />
+                      Company Identity
+                    </CardTitle>
+                    <CardDescription>Core details about your company.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="co-name">Company Name *</Label>
+                        <Input
+                          id="co-name"
+                          {...register("company.name")}
+                          placeholder="Acme Corporation"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="co-website">Company Website *</Label>
+                        <Input
+                          id="co-website"
+                          {...register("company.website")}
+                          placeholder="https://acme.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="co-industry">Industry *</Label>
+                        <Input
+                          id="co-industry"
+                          {...register("company.industry")}
+                          placeholder="e.g. Technology, Healthcare, Finance"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="co-city">City *</Label>
+                        <Input
+                          id="co-city"
+                          {...register("company.city")}
+                          placeholder="San Francisco"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="co-size">Company Size *</Label>
+                      <select
+                        id="co-size"
+                        className="w-full p-2 rounded-md border bg-background text-sm"
+                        {...register("company.size")}
+                      >
+                        <option value="">Select company size</option>
+                        <option value="1-10">1–10 employees</option>
+                        <option value="11-50">11–50 employees</option>
+                        <option value="51-200">51–200 employees</option>
+                        <option value="201-500">201–500 employees</option>
+                        <option value="501-1000">501–1000 employees</option>
+                        <option value="1000+">1000+ employees</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="co-description">Company Description *</Label>
+                      <Textarea
+                        id="co-description"
+                        {...register("company.description")}
+                        placeholder="Tell us about your company, mission, and what makes you unique..."
+                        className="h-36 resize-none"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {(watch("company.description") as string | undefined)?.length || 0} / 2000 characters
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Contact & Practitioner */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Globe className="w-5 h-5" />
+                      Contact &amp; Practitioner Info
+                    </CardTitle>
+                    <CardDescription>Company contact details and practitioner status.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="co-contactEmail">Company Contact Email *</Label>
+                      <Input
+                        id="co-contactEmail"
+                        type="email"
+                        {...register("company.contactEmail")}
+                        placeholder="contact@acme.com"
+                      />
+                      <p className="text-xs text-muted-foreground">This may differ from your account login email.</p>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/30">
+                      <input
+                        id="co-independent"
+                        type="checkbox"
+                        className="w-4 h-4 accent-primary"
+                        {...register("company.isIndependentPractitioner")}
+                      />
+                      <div>
+                        <Label htmlFor="co-independent" className="font-medium cursor-pointer">
+                          Independent Practitioner
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Check this if you operate as a solo independent practitioner rather than an organisation.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Verification Info */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building className="w-5 h-5" />
+                      Verification
+                    </CardTitle>
+                    <CardDescription>Your company verification status and method.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/30">
+                      <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          profile?.company?.verificationStatus === 'verified'
+                            ? 'bg-green-500/15 text-green-600 border-green-500/30'
+                            : profile?.company?.verificationStatus === 'rejected'
+                            ? 'bg-red-500/15 text-red-600 border-red-500/30'
+                            : profile?.company?.verificationStatus === 'pending'
+                            ? 'bg-yellow-500/15 text-yellow-600 border-yellow-500/30'
+                            : 'bg-muted text-muted-foreground'
+                        }
+                      >
+                        {profile?.company?.verificationStatus
+                          ? profile.company.verificationStatus.charAt(0).toUpperCase() +
+                            profile.company.verificationStatus.slice(1)
+                          : 'Unverified'}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="co-verificationMethod">Verification Method *</Label>
+                      <select
+                        id="co-verificationMethod"
+                        className="w-full p-2 rounded-md border bg-background text-sm"
+                        {...register("company.verificationMethod")}
+                      >
+                        <option value="none">None</option>
+                        <option value="website">Website</option>
+                        <option value="social_media">Social Media</option>
+                        <option value="document">Document</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="co-verifiedWebsite">Verified Website URL</Label>
+                      <Input
+                        id="co-verifiedWebsite"
+                        {...register("company.verifiedWebsite")}
+                        placeholder="https://yourverifiedsite.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Verified Social Media</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="co-smPlatform" className="text-xs text-muted-foreground">Platform</Label>
+                          <Input
+                            id="co-smPlatform"
+                            {...register("company.verifiedSocialMedia.platform")}
+                            placeholder="e.g. LinkedIn"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="co-smUrl" className="text-xs text-muted-foreground">Profile URL</Label>
+                          <Input
+                            id="co-smUrl"
+                            {...register("company.verifiedSocialMedia.url")}
+                            placeholder="https://linkedin.com/company/acme"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="co-smFollowers" className="text-xs text-muted-foreground">Followers</Label>
+                          <Input
+                            id="co-smFollowers"
+                            type="number"
+                            {...register("company.verifiedSocialMedia.followers")}
+                            placeholder="5000"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
             )}
 
         </div>

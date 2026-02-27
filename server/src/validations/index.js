@@ -27,6 +27,12 @@ const {
   addNotesSchema,
 } = require('./applicationValidation');
 
+const {
+  onboardCompanySchema,
+  updateCompanySchema,
+  updateVerificationStatusSchema,
+} = require('./companyValidation');
+
 module.exports = {
   // Auth
   registerSchema,
@@ -49,4 +55,8 @@ module.exports = {
   updateApplicationStatusSchema,
   rateApplicationSchema,
   addNotesSchema,
+  // Company
+  onboardCompanySchema,
+  updateCompanySchema,
+  updateVerificationStatusSchema,
 };

@@ -53,6 +53,18 @@ const resumeFilter = (req, file, cb) => {
   }
 };
 
+// Configure storage for company logos
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/logos');
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const filename = `logo-${uuid()}${ext}`;
+    cb(null, filename);
+  },
+});
+
 // Avatar upload middleware
 const uploadAvatar = multer({
   storage: avatarStorage,
@@ -70,6 +82,15 @@ const uploadResume = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
   },
 }).single('resume');
+
+// Company logo upload middleware
+const uploadLogo = multer({
+  storage: logoStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+}).single('logo');
 
 // Wrapper to handle multer errors
 const handleUpload = (uploadMiddleware) => {
@@ -91,4 +112,5 @@ const handleUpload = (uploadMiddleware) => {
 module.exports = {
   uploadAvatar: handleUpload(uploadAvatar),
   uploadResume: handleUpload(uploadResume),
+  uploadLogo: handleUpload(uploadLogo),
 };

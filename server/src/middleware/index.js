@@ -1,7 +1,7 @@
 const { authenticate, authorize, optionalAuth } = require('./auth');
 const { errorHandler, notFound } = require('./errorHandler');
 const validate = require('./validate');
-const { uploadAvatar, uploadResume } = require('./upload');
+const { uploadAvatar, uploadResume, uploadLogo } = require('./upload');
 const { apiLimiter, authLimiter, passwordResetLimiter, emailLimiter } = require('./rateLimiter');
 
 module.exports = {
@@ -13,6 +13,7 @@ module.exports = {
   validate,
   uploadAvatar,
   uploadResume,
+  uploadLogo,
   apiLimiter,
   authLimiter,
   passwordResetLimiter,

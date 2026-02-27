@@ -15,6 +15,7 @@ const {
   applicationRoutes,
   notificationRoutes,
   adminRoutes,
+  companyRoutes,
 } = require('./routes');
 
 // Initialize express app
@@ -69,6 +70,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/company', companyRoutes);
 
 // 404 handler
 app.use(notFound);

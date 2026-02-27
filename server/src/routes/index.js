@@ -4,6 +4,7 @@ const jobRoutes = require('./jobRoutes');
 const applicationRoutes = require('./applicationRoutes');
 const notificationRoutes = require('./notificationRoutes');
 const adminRoutes = require('./adminRoutes');
+const companyRoutes = require('./companyRoutes');
 
 module.exports = {
   authRoutes,
@@ -12,4 +13,5 @@ module.exports = {
   applicationRoutes,
   notificationRoutes,
   adminRoutes,
+  companyRoutes,
 };

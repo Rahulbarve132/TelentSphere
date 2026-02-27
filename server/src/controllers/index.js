@@ -4,6 +4,7 @@ const jobController = require('./jobController');
 const applicationController = require('./applicationController');
 const notificationController = require('./notificationController');
 const adminController = require('./adminController');
+const companyController = require('./companyController');
 
 module.exports = {
   authController,
@@ -12,4 +13,5 @@ module.exports = {
   applicationController,
   notificationController,
   adminController,
+  companyController,
 };

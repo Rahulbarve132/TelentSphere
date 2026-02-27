@@ -9,7 +9,7 @@ interface User {
   _id: string;
   id?: string;
   email: string;
-  role: "talent" | "client" | "recruiter" | "admin";
+  role: "talent" | "client" | "recruiter" | "admin" | "company";
   firstName?: string;
   lastName?: string;
   avatar?: string;
@@ -70,6 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (userData.role === 'talent') {
         router.push('/dashboard/applications');
     } else if (userData.role === 'client' || userData.role === 'recruiter') {
+        router.push('/dashboard/jobs');
+    } else if (userData.role === 'company') {
         router.push('/dashboard/jobs');
     } else {
         router.push('/dashboard');

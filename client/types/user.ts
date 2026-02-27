@@ -1,7 +1,7 @@
 export interface User {
     _id: string;
     email: string;
-    role: string;
+    role: 'talent' | 'client' | 'recruiter' | 'admin' | 'company';
     avatar?: string;
     isVerified?: boolean;
     isActive?: boolean;
@@ -42,11 +42,26 @@ export interface Location {
     country?: string;
 }
 
+export interface VerifiedSocialMedia {
+    platform?: string;
+    url?: string;
+    followers?: number;
+}
+
 export interface Company {
     name: string;
     website?: string;
     size?: string;
     industry?: string;
+    description?: string;
+    city?: string;
+    logo?: string | null;
+    isIndependentPractitioner?: boolean;
+    verificationStatus?: 'pending' | 'verified' | 'rejected' | 'unverified';
+    verificationMethod?: 'website' | 'social_media' | 'document' | 'none' | null;
+    verifiedWebsite?: string;
+    verifiedSocialMedia?: VerifiedSocialMedia;
+    contactEmail?: string;
 }
 
 export interface UserProfile {
