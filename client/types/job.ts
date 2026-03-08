@@ -12,6 +12,12 @@ export interface JobBudget {
     type: 'hourly' | 'fixed' | 'monthly' | 'yearly';
 }
 
+export interface JobPostedBy {
+    _id: string;
+    email: string;
+    name?: string;
+}
+
 export interface Job {
     _id: string;
     title: string;
@@ -28,11 +34,14 @@ export interface Job {
     benefits?: string[];
     status: 'open' | 'closed' | 'paused';
     visibility: 'public' | 'private';
-    postedBy?: string;
+    isFeatured?: boolean;
+    postedBy?: string | JobPostedBy;
     createdAt: string;
     updatedAt?: string;
     deadline?: string;
+    applicationDeadline?: string;
     applicationsCount?: number;
+    viewsCount?: number;
 }
 
 export interface JobsPagination {

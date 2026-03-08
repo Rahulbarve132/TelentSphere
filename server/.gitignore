@@ -9,8 +9,10 @@ node_modules/
 # Uploads directory (keep structure but not files)
 uploads/avatars/*
 uploads/resumes/*
+uploads/logos/*
 !uploads/avatars/.gitkeep
 !uploads/resumes/.gitkeep
+!uploads/logos/.gitkeep
 
 # Logs
 logs/

@@ -89,6 +89,12 @@ export default function AdminAllJobsPage() {
         }
     };
 
+    const getPostedByEmail = (postedBy: Job['postedBy']): string => {
+        if (!postedBy) return 'Unknown';
+        if (typeof postedBy === 'string') return postedBy;
+        return postedBy.email;
+    };
+
     const formatLocation = (location: Job['location']) => {
         if (location.type === 'remote') {
             return `Remote${location.country ? ` (${location.country})` : ''}`;
@@ -200,7 +206,7 @@ export default function AdminAllJobsPage() {
                                             <div className="flex-1">
                                                 <h3 className="text-lg font-semibold">{job.title}</h3>
                                                 <p className="text-sm text-muted-foreground mt-1">
-                                                    Posted by: {job.postedBy.email}
+                                                    Posted by: {getPostedByEmail(job.postedBy)}
                                                 </p>
                                             </div>
                                         </div>
